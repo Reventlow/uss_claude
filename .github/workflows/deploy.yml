@@ -1,4 +1,4 @@
-name: Deploy
+name: Build and Push Docker Image
 
 on:
   push:
@@ -42,18 +42,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to homelab
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.HOMELAB_HOST }}
-          username: ${{ secrets.HOMELAB_USER }}
-          key: ${{ secrets.HOMELAB_SSH_KEY }}
-          script: |
-            cd ~/uss-claude
-            docker compose pull
-            docker compose up -d
