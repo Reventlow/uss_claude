@@ -1,0 +1,12 @@
+services:
+  bridge:
+    build: .
+    ports:
+      - "${BRIDGE_PORT:-3420}:3420"
+    environment:
+      - BRIDGE_HOST=0.0.0.0
+      - BRIDGE_PORT=3420
+      - BRIDGE_TOKEN=${BRIDGE_TOKEN}
+      - BRIDGE_PASSWORD=${BRIDGE_PASSWORD:-}
+      - STATIC_DIR=/app/static
+    restart: unless-stopped

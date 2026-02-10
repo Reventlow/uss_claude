@@ -1,0 +1,93 @@
+/* LCARS-inspired theme for USS Claude bridge UI */
+
+:root {
+  --lcars-orange: #ff9900;
+  --lcars-mauve: #cc99cc;
+  --lcars-periwinkle: #9999ff;
+  --lcars-salmon: #ff9966;
+  --lcars-gold: #ffcc66;
+  --lcars-red: #cc6666;
+  --lcars-blue: #9999cc;
+  --lcars-bg: #000000;
+  --lcars-text: #ff9900;
+  --lcars-radius: 16px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  background: var(--lcars-bg);
+  color: var(--lcars-text);
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  overflow: hidden;
+}
+
+/* LCARS curved bars */
+.lcars-bar {
+  background: var(--lcars-orange);
+  border-radius: var(--lcars-radius);
+}
+
+.lcars-bar--mauve {
+  background: var(--lcars-mauve);
+}
+
+.lcars-bar--periwinkle {
+  background: var(--lcars-periwinkle);
+}
+
+.lcars-bar--salmon {
+  background: var(--lcars-salmon);
+}
+
+/* Layout */
+.bridge-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  gap: 4px;
+  padding: 4px;
+}
+
+.bridge-main {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-height: 0;
+}
+
+.bridge-canvas-wrap {
+  flex-shrink: 0;
+}
+
+.bridge-sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  max-width: 320px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--lcars-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--lcars-orange);
+  border-radius: 3px;
+}
