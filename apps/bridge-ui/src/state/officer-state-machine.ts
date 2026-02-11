@@ -21,6 +21,8 @@ export interface OfficerFSM {
   pendingReport: string | null;
   /** MCP "done" arrived while still walking to station */
   pendingDone: boolean;
+  /** Elapsed ms in active task states (WALKING_TO_STATION + WORKING) */
+  stuckTimer: number;
 }
 
 /** Create initial officer FSM */
@@ -42,6 +44,7 @@ export function createOfficerFSM(name: OfficerName, idlePos: Point): OfficerFSM 
     wanderTarget: null,
     pendingReport: null,
     pendingDone: false,
+    stuckTimer: 0,
   };
 }
 
@@ -113,6 +116,7 @@ export function tickOfficer(
       break;
 
     case OfficerState.WALKING_TO_STATION: {
+      fsm.stuckTimer += deltaMs;
       fsm.render.direction = directionTo(fsm.render.position, stationPos);
       const arrived = moveToward(fsm.render.position, stationPos, speed, deltaS);
       fsm.render.animFrame = arrived ? 0 : ((fsm.render.animFrame + (deltaMs > 100 ? 1 : 0)) % 3);
@@ -127,6 +131,7 @@ export function tickOfficer(
     }
 
     case OfficerState.WORKING:
+      fsm.stuckTimer += deltaMs;
       fsm.timer -= deltaMs;
       if (fsm.timer <= 0) {
         if (captainPresent) {
@@ -136,6 +141,7 @@ export function tickOfficer(
           // No captain, just go back to idle
           fsm.state = OfficerState.WALKING_TO_IDLE;
         }
+        fsm.stuckTimer = 0;
       }
       break;
 

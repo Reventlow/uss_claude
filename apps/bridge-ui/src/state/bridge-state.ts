@@ -8,6 +8,7 @@ import {
   type StatusMessage,
   POSITIONS,
   CAPTAIN_PING,
+  TIMING,
   getOfficerNames,
   getOfficer,
   getRandomReport,
@@ -207,6 +208,7 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
           officerFsm.state === OfficerState.GOSSIPING
         ) {
           officerFsm.state = OfficerState.WALKING_TO_STATION;
+          officerFsm.stuckTimer = 0;
           addLogEntry(next, `${config.displayName} proceeding to ${config.role} station.`);
         }
       } else if (mcpAction === "done") {
@@ -218,6 +220,7 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
 
         if (officerFsm.state === OfficerState.WORKING) {
           // Already working — transition to report/idle immediately
+          officerFsm.stuckTimer = 0;
           if (captainOnBridge) {
             officerFsm.state = OfficerState.WALKING_TO_CAPTAIN;
             const report = getRandomReport(name);
@@ -254,6 +257,18 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
           config.stationPosition,
           config.idlePosition,
         );
+
+        // Auto-recover stuck officers (no "done" event received)
+        if (
+          officer.stuckTimer >= TIMING.STUCK_TIMEOUT &&
+          (officer.state === OfficerState.WALKING_TO_STATION ||
+           officer.state === OfficerState.WORKING)
+        ) {
+          officer.stuckTimer = 0;
+          officer.pendingDone = false;
+          officer.state = OfficerState.WALKING_TO_IDLE;
+          addLogEntry(next, `${config.displayName} returning to post — no response received.`);
+        }
 
         // If officer just finished reporting, Calvin listens
         if (

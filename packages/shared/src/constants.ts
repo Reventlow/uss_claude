@@ -28,6 +28,8 @@ export const TIMING = {
   SCOLD_DURATION: 4_000,
   /** Calvin listen animation duration (ms) */
   LISTEN_DURATION: 2_500,
+  /** Auto-complete an officer stuck in WALKING_TO_STATION or WORKING (ms) */
+  STUCK_TIMEOUT: 30_000,
 } as const;
 
 // --- Grid constants ---
