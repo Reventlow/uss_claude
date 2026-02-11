@@ -1,6 +1,7 @@
 services:
   bridge:
-    build: .
+    image: elohite/uss-claude:latest
+    env_file: .env
     ports:
       - "${BRIDGE_PORT:-3420}:3420"
     environment:
@@ -9,4 +10,10 @@ services:
       - BRIDGE_TOKEN=${BRIDGE_TOKEN}
       - BRIDGE_PASSWORD=${BRIDGE_PASSWORD:-}
       - STATIC_DIR=/app/static
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3420/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
