@@ -31,6 +31,8 @@ import {
   createIdleBehaviorState,
   tickIdleBehavior,
   setCaptainPresence,
+  triggerCameo,
+  isCameoActive,
 } from "./idle-behavior-manager.js";
 
 /** A log entry in the comms log */
@@ -69,7 +71,8 @@ export type BridgeAction =
   | { type: "DEBUG_OFFICER_START"; officer: OfficerName }
   | { type: "DEBUG_OFFICER_DONE"; officer: OfficerName }
   | { type: "DEBUG_CONNECT_LAPTOP" }
-  | { type: "DEBUG_DISCONNECT_LAPTOP" };
+  | { type: "DEBUG_DISCONNECT_LAPTOP" }
+  | { type: "DEBUG_TRIGGER_CAMEO" };
 
 /** Create initial bridge state */
 export function createInitialState(): BridgeState {
@@ -195,6 +198,9 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
     }
 
     case "MCP_EVENT": {
+      // Don't interrupt an active cameo scene
+      if (isCameoActive(next.idleBehavior)) break;
+
       const { officer: name, action: mcpAction } = action.payload;
       const officerFsm = next.officers.get(name);
       if (!officerFsm) break;
@@ -332,6 +338,13 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
       calvinLeave(next.calvin);
       setCaptainPresence(next.idleBehavior, false);
       addLogEntry(next, "[DEBUG] Laptop disconnected.");
+      break;
+
+    case "DEBUG_TRIGGER_CAMEO":
+      if (!isCameoActive(next.idleBehavior)) {
+        triggerCameo(next.idleBehavior, next.officers);
+        addLogEntry(next, "[DEBUG] Cameo event triggered.");
+      }
       break;
   }
 

@@ -40,15 +40,16 @@ export function drawCharacters(
     drawSprite(ctx, frame, char.position.x, char.position.y);
 
     // Draw name label below the character
-    const info = CHARACTER_INFO[char.name];
-    if (info) {
+    const labelText = char.labelOverride ?? CHARACTER_INFO[char.name]?.label;
+    const labelColor = char.labelColorOverride ?? CHARACTER_INFO[char.name]?.color;
+    if (labelText && labelColor) {
       ctx.save();
-      ctx.fillStyle = info.color;
+      ctx.fillStyle = labelColor;
       ctx.font = `${PS * 2.5}px "Press Start 2P", monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       ctx.fillText(
-        info.label,
+        labelText,
         Math.round(char.position.x * PS),
         Math.round((char.position.y + CH / 2 + 1) * PS),
       );

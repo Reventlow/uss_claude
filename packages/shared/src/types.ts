@@ -77,6 +77,31 @@ export enum DorteState {
   LEAVING = "leaving",
 }
 
+/** Cameo event phase states */
+export enum CameoState {
+  INACTIVE = "inactive",
+  ENTERING = "entering",
+  SPEAKING = "speaking",
+  OFFICERS_REACTING = "officers_reacting",
+  DORTE_ENTERING = "dorte_entering",
+  DORTE_SPEAKING = "dorte_speaking",
+  CAMEO_REPEATING = "cameo_repeating",
+  CAMEO_LEAVING = "cameo_leaving",
+  DORTE_LEAVING = "dorte_leaving",
+}
+
+/** A cross-franchise cameo script */
+export interface CameoScript {
+  characterId: string;
+  displayName: string;
+  labelColor: string;
+  entranceLine: string;
+  /** Optional custom line officers yell (defaults to "GET OUT!") */
+  officerReaction?: string;
+  dorteLine: string;
+  exitLine: string;
+}
+
 /** Bridge lighting atmosphere */
 export enum BridgeAtmosphere {
   /** Laptop not connected — slightly dimmed but still visible */
@@ -117,7 +142,7 @@ export interface Scolding {
 
 /** Render state for a character on the canvas */
 export interface CharacterRenderState {
-  name: CharacterName;
+  name: string;
   position: Point;
   targetPosition: Point | null;
   direction: Direction;
@@ -125,6 +150,10 @@ export interface CharacterRenderState {
   visible: boolean;
   speechBubble: string | null;
   speechBubbleTimer: number;
+  /** Override label text for cameo characters */
+  labelOverride?: string;
+  /** Override label color for cameo characters */
+  labelColorOverride?: string;
 }
 
 /** Cardinal directions for sprite facing */

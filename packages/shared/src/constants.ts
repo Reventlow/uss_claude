@@ -30,6 +30,16 @@ export const TIMING = {
   LISTEN_DURATION: 2_500,
   /** Auto-complete an officer stuck in WALKING_TO_STATION or WORKING (ms) */
   STUCK_TIMEOUT: 30_000,
+  /** Cameo event interval when captain is present (13 minutes) */
+  CAMEO_INTERVAL: 780_000,
+  /** How long the cameo character speaks (ms) */
+  CAMEO_SPEAK_DURATION: 4_000,
+  /** How long officers yell "GET OUT!" (ms) */
+  CAMEO_REACTION_DURATION: 3_000,
+  /** How long Dorte speaks during a cameo (ms) */
+  CAMEO_DORTE_SPEAK_DURATION: 5_000,
+  /** How long the cameo character repeats their corrected line (ms) */
+  CAMEO_REPEAT_DURATION: 4_000,
 } as const;
 
 // --- Grid constants ---
@@ -74,6 +84,9 @@ export const POSITIONS = {
 
   // Dorte scolding position
   DORTE_SCOLD: { x: 120, y: 125 } as Point,
+
+  // Cameo stop position (between captain and railing)
+  CAMEO_STOP: { x: 120, y: 140 } as Point,
 
   // Wander bounds
   WANDER_MIN: { x: 40, y: 60 } as Point,

@@ -28,6 +28,7 @@ function collectCharacters(state: BridgeState): CharacterRenderState[] {
   }
   chars.push(state.calvin.render);
   chars.push(state.idleBehavior.dorte.render);
+  chars.push(state.idleBehavior.cameo.render);
   return chars;
 }
 

@@ -1,5 +1,6 @@
 import type { CharacterName, Direction } from "@uss-claude/shared";
 import { COLORS } from "./colors.js";
+import { CAMEO_SPRITES } from "./cameo-sprites.js";
 
 /**
  * Sprite pixel data: 2D color arrays (8 wide x 12 tall).
@@ -457,16 +458,44 @@ export const SPRITES: Record<CharacterName, CharacterSprites> = {
   dorte: { walk: buildSpriteSet(makeDorteDown, makeDorteUp, makeDorteLeft, makeDorteRight) },
 };
 
-/** Get the appropriate sprite frame for a character */
+/** Fallback magenta silhouette for unknown characters */
+const FALLBACK_FRAME: SpriteFrame = [
+  [_, _, "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", _, _],
+  [_, "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", _],
+  [_, "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", _],
+  [_, "#FF00FF", _, "#FF00FF", "#FF00FF", _, "#FF00FF", _],
+  [_, _, "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", _, _],
+  [_, "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", _],
+  [_, "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", _],
+  [_, "#CC00CC", "#FF00FF", "#FF00FF", "#FF00FF", "#FF00FF", "#CC00CC", _],
+  [_, _, "#CC00CC", "#FF00FF", "#FF00FF", "#CC00CC", _, _],
+  [_, _, "#CC00CC", _, _, "#CC00CC", _, _],
+  [_, _, "#CC00CC", _, _, "#CC00CC", _, _],
+  [_, _, "#CC00CC", _, _, "#CC00CC", _, _],
+];
+
+/** Get the appropriate sprite frame for a character (supports cameo names) */
 export function getSpriteFrame(
-  name: CharacterName,
+  name: string,
   direction: Direction,
   frame: number,
   seated?: boolean,
 ): SpriteFrame {
-  const sprites = SPRITES[name];
-  if (seated && sprites.seated) {
-    return sprites.seated;
+  // Try main sprites first
+  const mainSprites = SPRITES[name as CharacterName];
+  if (mainSprites) {
+    if (seated && mainSprites.seated) {
+      return mainSprites.seated;
+    }
+    return mainSprites.walk[direction][frame % 3];
   }
-  return sprites.walk[direction][frame % 3];
+
+  // Try cameo sprites
+  const cameoSprites = CAMEO_SPRITES[name];
+  if (cameoSprites) {
+    return cameoSprites.walk[direction][frame % 3];
+  }
+
+  // Fallback magenta silhouette
+  return FALLBACK_FRAME;
 }

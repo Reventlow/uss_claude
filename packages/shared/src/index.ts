@@ -10,6 +10,7 @@ export type {
   PunExchange,
   GossipExchange,
   Scolding,
+  CameoScript,
   CharacterRenderState,
   Direction,
 } from "./types.js";
@@ -18,6 +19,7 @@ export {
   OfficerState,
   CalvinState,
   DorteState,
+  CameoState,
   BridgeAtmosphere,
 } from "./types.js";
 
@@ -60,4 +62,4 @@ export { TIMING, GRID, POSITIONS, RECONNECT, VIEWSCREEN, CAPTAIN_PING } from "./
 export { calculateStardate } from "./stardate.js";
 
 // Content
-export { PUNS, GOSSIPS, SCOLDINGS, getRandomReport } from "./content/index.js";
+export { PUNS, GOSSIPS, SCOLDINGS, CAMEOS, getRandomReport } from "./content/index.js";
