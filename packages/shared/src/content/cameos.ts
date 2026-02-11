@@ -13,7 +13,7 @@ export const CAMEOS: CameoScript[] = [
     labelColor: "#FFFFFF",
     entranceLine: "I am looking for Data.",
     dorteLine: "Sir, you are in violation of Interdimensional Trespass Code 7-Alpha. I need you to fill out Form 42-B.",
-    exitLine: "Data is not the droid you are looking for...",
+    exitLine: "These are not the droids... I mean, this is not the bridge I am looking for...",
   },
   {
     characterId: "dalek",
@@ -75,7 +75,7 @@ export const CAMEOS: CameoScript[] = [
     characterId: "alf",
     displayName: "ALF",
     labelColor: "#CC6633",
-    entranceLine: "Hey! Has anyone seen a cat around here? I heard you have a Data cat!",
+    entranceLine: "Hey! Has anyone seen a cat around here? I heard you have Data's cat!",
     dorteLine: "Pet consumption is a SEVERE violation of the crew companionship policy. Section 14, paragraph 8. OUT.",
     exitLine: "No cats?! What kind of starship IS this?!",
   },

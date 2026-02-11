@@ -15,7 +15,7 @@ const CHARACTER_TOOLTIPS: Record<string, string> = {
   fizban: "FIZBAN \u2014 Science Officer",
   jasper: "JASPER \u2014 Ops Officer",
   calvin: "CALVIN \u2014 Captain",
-  dorte: "DORTE \u2014 HR",
+  dorte: "HR DORTE \u2014 HR Director",
 };
 
 function getCharacterTooltip(name: string): string {
@@ -87,8 +87,10 @@ export function BridgeCanvas({ state }: BridgeCanvasProps) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
-          width: CANVAS_W,
-          height: CANVAS_H,
+          width: "100%",
+          maxWidth: CANVAS_W,
+          height: "auto",
+          aspectRatio: `${CANVAS_W} / ${CANVAS_H}`,
           imageRendering: "pixelated",
           cursor: tooltip ? "pointer" : "default",
         }}

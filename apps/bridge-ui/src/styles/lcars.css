@@ -28,7 +28,8 @@ body,
   color: var(--lcars-text);
   font-family: "Press Start 2P", monospace;
   font-size: 10px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* LCARS curved bars */
@@ -53,7 +54,7 @@ body,
 .bridge-app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   gap: 4px;
   padding: 4px;
 }
@@ -67,6 +68,7 @@ body,
 
 .bridge-canvas-wrap {
   flex-shrink: 0;
+  max-width: 100%;
 }
 
 .bridge-sidebar {
@@ -76,6 +78,22 @@ body,
   gap: 4px;
   min-width: 200px;
   max-width: 320px;
+}
+
+/* Mobile: stack vertically, canvas fills width */
+@media (max-width: 800px) {
+  .bridge-main {
+    flex-direction: column;
+  }
+
+  .bridge-canvas-wrap {
+    width: 100%;
+  }
+
+  .bridge-sidebar {
+    min-width: 0;
+    max-width: none;
+  }
 }
 
 /* Scrollbar styling */

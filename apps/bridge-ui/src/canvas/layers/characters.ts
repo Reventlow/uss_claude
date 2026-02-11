@@ -12,7 +12,7 @@ const CHARACTER_INFO: Record<string, { label: string; color: string }> = {
   fizban: { label: "FIZBAN", color: COLORS.uniformBlue },
   jasper: { label: "JASPER", color: COLORS.uniformRedOrange },
   calvin: { label: "CALVIN", color: COLORS.uniformGold },
-  dorte: { label: "DORTE", color: COLORS.uniformGray },
+  dorte: { label: "HR DORTE", color: COLORS.uniformGray },
 };
 
 /** Draw all visible characters, Y-sorted for depth */
