@@ -92,12 +92,12 @@ export function drawBackground(
     );
     fillRect(oc, s.x + 2, s.y + 1, s.w - 4, s.h - 3);
 
-    // Station label below the console
+    // Station label above the console
     oc.fillStyle = applyBrightness(COLORS.orange, brightness);
     oc.font = `${PS * 3}px "Press Start 2P", monospace`;
     oc.textAlign = "center";
-    oc.textBaseline = "top";
-    oc.fillText(s.label, (s.x + s.w / 2) * PS, (s.y + s.h + 2) * PS);
+    oc.textBaseline = "bottom";
+    oc.fillText(s.label, (s.x + s.w / 2) * PS, (s.y - 1) * PS);
   }
 
   // Railing
