@@ -23,6 +23,8 @@ export interface OfficerFSM {
   pendingDone: boolean;
   /** Elapsed ms in active task states (WALKING_TO_STATION + WORKING) */
   stuckTimer: number;
+  /** Elapsed ms since last dance frame change */
+  danceTimer: number;
 }
 
 /** Create initial officer FSM */
@@ -45,6 +47,7 @@ export function createOfficerFSM(name: OfficerName, idlePos: Point): OfficerFSM 
     pendingReport: null,
     pendingDone: false,
     stuckTimer: 0,
+    danceTimer: 0,
   };
 }
 
@@ -205,6 +208,16 @@ export function tickOfficer(
       fsm.render.animFrame = arrived ? 0 : ((fsm.render.animFrame + (deltaMs > 100 ? 1 : 0)) % 3);
       if (arrived) {
         fsm.state = OfficerState.IDLE;
+      }
+      break;
+    }
+
+    case OfficerState.DANCING: {
+      // Cycle dance animation frames at DANCE_FRAME_INTERVAL pace
+      fsm.danceTimer += deltaMs;
+      if (fsm.danceTimer >= TIMING.DANCE_FRAME_INTERVAL) {
+        fsm.danceTimer -= TIMING.DANCE_FRAME_INTERVAL;
+        fsm.render.animFrame = (fsm.render.animFrame + 1) % 4;
       }
       break;
     }

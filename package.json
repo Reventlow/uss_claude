@@ -7,6 +7,7 @@
     "build:shared": "pnpm --filter @uss-claude/shared build",
     "build:server": "pnpm --filter @uss-claude/bridge-server build",
     "build:cli": "pnpm --filter @uss-claude/hook-cli build",
+    "build:spoty": "pnpm --filter @uss-claude/spoty-daemon build",
     "build:ui": "pnpm --filter @uss-claude/bridge-ui build",
     "dev": "pnpm --filter @uss-claude/bridge-server dev",
     "dev:ui": "pnpm --filter @uss-claude/bridge-ui dev",

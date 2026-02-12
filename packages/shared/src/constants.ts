@@ -30,6 +30,8 @@ export const TIMING = {
   LISTEN_DURATION: 2_500,
   /** Auto-complete an officer stuck in WALKING_TO_STATION or WORKING (ms) */
   STUCK_TIMEOUT: 30_000,
+  /** Dance animation frame cycle interval (ms) */
+  DANCE_FRAME_INTERVAL: 300,
   /** Cameo event interval when captain is present (13 minutes) */
   CAMEO_INTERVAL: 780_000,
   /** How long the cameo character speaks (ms) */
@@ -70,12 +72,14 @@ export const POSITIONS = {
   ENTRANCE: { x: 120, y: 182 } as Point,
 
   // Officer stations (consoles)
-  GLASS_STATION: { x: 50, y: 70 } as Point,
+  SPOTY_STATION: { x: 50, y: 70 } as Point,
+  GLASS_STATION: { x: 50, y: 110 } as Point,
   FIZBAN_STATION: { x: 190, y: 70 } as Point,
   JASPER_STATION: { x: 120, y: 100 } as Point,
 
   // Officer idle positions (near their stations)
-  GLASS_IDLE: { x: 55, y: 85 } as Point,
+  SPOTY_IDLE: { x: 45, y: 85 } as Point,
+  GLASS_IDLE: { x: 55, y: 125 } as Point,
   FIZBAN_IDLE: { x: 185, y: 85 } as Point,
   JASPER_IDLE: { x: 125, y: 115 } as Point,
 

@@ -1,17 +1,19 @@
 import { WebSocket } from "ws";
 import type { IncomingMessage } from "node:http";
-import { parseMessage, isMcpEvent, isHeartbeat, isDisconnect, isSystemIdle } from "@uss-claude/shared";
-import type { McpEventMessage } from "@uss-claude/shared";
+import { parseMessage, isMcpEvent, isHeartbeat, isDisconnect, isSystemIdle, isTrackEvent } from "@uss-claude/shared";
+import type { McpEventMessage, TrackEventMessage } from "@uss-claude/shared";
 import type { StateTracker } from "./state-tracker.js";
 import type { BridgeHandler } from "./bridge-handler.js";
 import { logger } from "./logger.js";
 
 /**
- * Handles the single ingest WebSocket connection from the CLI hook daemon.
- * Enforces token auth and single-connection policy.
+ * Handles ingest WebSocket connections from the CLI hook daemon
+ * and other ingest clients (e.g. spoty-daemon).
+ * Supports multiple named connections via ?client= query param.
+ * Enforces per-client single-connection policy.
  */
 export class IngestHandler {
-  private currentConnection: WebSocket | null = null;
+  private connections: Map<string, WebSocket> = new Map();
   private bridgeToken: string;
   private stateTracker: StateTracker;
   private bridgeHandler: BridgeHandler;
@@ -24,9 +26,10 @@ export class IngestHandler {
 
   /** Handle a new ingest WebSocket connection */
   handleConnection(ws: WebSocket, req: IncomingMessage): void {
+    const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+
     // Token authentication
     if (this.bridgeToken) {
-      const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
       const token = url.searchParams.get("token");
       if (token !== this.bridgeToken) {
         logger.warn("ingest", "Rejected ingest client: invalid token");
@@ -35,15 +38,22 @@ export class IngestHandler {
       }
     }
 
-    // Single connection policy: close old connection with 4001
-    if (this.currentConnection && this.currentConnection.readyState === WebSocket.OPEN) {
-      logger.info("ingest", "Replacing existing ingest connection");
-      this.currentConnection.close(4001, "Replaced by new connection");
+    // Identify connection source (default to "hook-cli" for backwards compat)
+    const clientName = url.searchParams.get("client") ?? "hook-cli";
+
+    // Per-client single-connection policy: close old connection with 4001
+    const existing = this.connections.get(clientName);
+    if (existing && existing.readyState === WebSocket.OPEN) {
+      logger.info("ingest", `Replacing existing ${clientName} connection`);
+      existing.close(4001, "Replaced by new connection");
     }
 
-    this.currentConnection = ws;
-    this.stateTracker.onIngestConnect();
-    logger.info("ingest", "Ingest client connected");
+    this.connections.set(clientName, ws);
+    // Only trigger laptop connect state for the main hook-cli client
+    if (clientName === "hook-cli") {
+      this.stateTracker.onIngestConnect();
+    }
+    logger.info("ingest", `Ingest client connected: ${clientName}`);
 
     ws.on("message", (raw) => {
       const data = typeof raw === "string" ? raw : raw.toString("utf-8");
@@ -57,6 +67,9 @@ export class IngestHandler {
         this.stateTracker.onMcpEvent(msg as McpEventMessage);
         // Forward MCP events to bridge clients
         this.bridgeHandler.broadcast(msg as McpEventMessage);
+      } else if (isTrackEvent(msg)) {
+        // Forward track events to bridge clients (don't affect Claude active/idle state)
+        this.bridgeHandler.broadcast(msg as TrackEventMessage);
       } else if (isHeartbeat(msg)) {
         this.stateTracker.onHeartbeat();
       } else if (isDisconnect(msg)) {
@@ -69,23 +82,27 @@ export class IngestHandler {
     });
 
     ws.on("close", (code, reason) => {
-      logger.info("ingest", "Ingest client disconnected", {
+      logger.info("ingest", `Ingest client disconnected: ${clientName}`, {
         code,
         reason: reason.toString("utf-8"),
       });
-      if (this.currentConnection === ws) {
-        this.currentConnection = null;
-        this.stateTracker.onIngestDisconnect();
+      if (this.connections.get(clientName) === ws) {
+        this.connections.delete(clientName);
+        // Only trigger laptop disconnect for the main hook-cli client
+        if (clientName === "hook-cli") {
+          this.stateTracker.onIngestDisconnect();
+        }
       }
     });
 
     ws.on("error", (err) => {
-      logger.error("ingest", "Ingest client error", { error: err.message });
+      logger.error("ingest", `Ingest client error (${clientName})`, { error: err.message });
     });
   }
 
-  /** Whether the ingest client is currently connected */
+  /** Whether the main ingest client (hook-cli) is currently connected */
   get isConnected(): boolean {
-    return this.currentConnection !== null && this.currentConnection.readyState === WebSocket.OPEN;
+    const main = this.connections.get("hook-cli");
+    return main !== null && main !== undefined && main.readyState === WebSocket.OPEN;
   }
 }

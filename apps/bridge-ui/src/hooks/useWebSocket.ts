@@ -4,6 +4,7 @@ import {
   isMcpEvent,
   isStatusMessage,
   isBridgePong,
+  isTrackEvent,
   RECONNECT,
   CAPTAIN_PING,
 } from "@uss-claude/shared";
@@ -60,6 +61,8 @@ export function useWebSocket(dispatch: (action: BridgeAction) => void) {
 
         if (isMcpEvent(msg)) {
           dispatch({ type: "MCP_EVENT", payload: msg });
+        } else if (isTrackEvent(msg)) {
+          dispatch({ type: "TRACK_EVENT", payload: msg });
         } else if (isStatusMessage(msg)) {
           dispatch({ type: "STATUS_UPDATE", payload: msg });
         } else if (isBridgePong(msg)) {

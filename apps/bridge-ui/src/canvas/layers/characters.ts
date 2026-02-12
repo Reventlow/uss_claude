@@ -1,4 +1,4 @@
-import { GRID, CalvinState, type CharacterRenderState } from "@uss-claude/shared";
+import { GRID, CalvinState, OfficerState, type CharacterRenderState } from "@uss-claude/shared";
 import { getSpriteFrame, type SpriteFrame } from "../sprites/sprite-data.js";
 import { COLORS } from "../sprites/colors.js";
 
@@ -11,9 +11,18 @@ const CHARACTER_INFO: Record<string, { label: string; color: string }> = {
   glass: { label: "GLASS", color: COLORS.uniformGold },
   fizban: { label: "FIZBAN", color: COLORS.uniformBlue },
   jasper: { label: "JASPER", color: COLORS.uniformRedOrange },
+  spoty: { label: "SPOTY", color: COLORS.spotifyGreen },
   calvin: { label: "CALVIN", color: COLORS.uniformGold },
   dorte: { label: "HR DORTE", color: COLORS.uniformGray },
 };
+
+/** Set of officer names currently in DANCING state (set externally before draw) */
+let dancingOfficers: Set<string> = new Set();
+
+/** Call before drawCharacters to inform which officers are dancing */
+export function setDancingOfficers(names: Set<string>): void {
+  dancingOfficers = names;
+}
 
 /** Draw all visible characters, Y-sorted for depth */
 export function drawCharacters(
@@ -29,12 +38,14 @@ export function drawCharacters(
     const isSeated = char.name === "calvin" && (
       calvinState === CalvinState.SEATED || calvinState === CalvinState.LISTENING
     );
+    const isDancing = dancingOfficers.has(char.name);
 
     const frame = getSpriteFrame(
       char.name,
       char.direction,
       char.animFrame,
       isSeated,
+      isDancing,
     );
 
     drawSprite(ctx, frame, char.position.x, char.position.y);

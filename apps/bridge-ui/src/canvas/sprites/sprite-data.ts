@@ -18,6 +18,7 @@ export interface SpriteSet {
 export interface CharacterSprites {
   walk: SpriteSet;
   seated?: SpriteFrame; // Only Calvin has a seated variant
+  dance?: SpriteFrame[]; // Dance animation frames (Spoty)
 }
 
 const _ = null; // Shorthand for transparent
@@ -259,6 +260,140 @@ function makeJasperRight(frame: number): SpriteFrame {
   ];
 }
 
+// --- Spoty (Comms Officer, Gold uniform with headphones accent) ---
+const SG = COLORS.spotifyGreen; // Headphones accent color
+
+function makeSpotyDown(frame: number): SpriteFrame {
+  const legL = frame === 1 ? GD : frame === 2 ? _ : GD;
+  const legR = frame === 1 ? _ : frame === 2 ? GD : GD;
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, SG, S, S, S, S, SG, _],
+    [_, S, D, S, S, D, S, _],
+    [_, _, S, S, S, S, _, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GD, GU, GU, GU, GU, GD, _],
+    [_, _, GD, GU, GU, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+    [_, legL, GD, _, _, GD, legR, _],
+    [_, _, GD, _, _, GD, _, _],
+  ];
+}
+
+function makeSpotyUp(frame: number): SpriteFrame {
+  const legL = frame === 1 ? GD : frame === 2 ? _ : GD;
+  const legR = frame === 1 ? _ : frame === 2 ? GD : GD;
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, SG, H, H, H, H, SG, _],
+    [_, H, H, H, H, H, H, _],
+    [_, _, H, H, H, H, _, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GD, GU, GU, GU, GU, GD, _],
+    [_, _, GD, GU, GU, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+    [_, legL, GD, _, _, GD, legR, _],
+    [_, _, GD, _, _, GD, _, _],
+  ];
+}
+
+function makeSpotyLeft(frame: number): SpriteFrame {
+  const legOff = frame === 1 ? -1 : frame === 2 ? 1 : 0;
+  return [
+    [_, _, H, H, H, _, _, _],
+    [_, H, H, H, H, H, _, _],
+    [_, SG, S, S, S, _, _, _],
+    [_, D, S, S, S, _, _, _],
+    [_, _, S, S, _, _, _, _],
+    [_, GU, GU, GU, GU, _, _, _],
+    [_, GU, GU, GU, GU, GU, _, _],
+    [GD, GU, GU, GU, GU, _, _, _],
+    [_, GD, GD, GU, _, _, _, _],
+    [_, _, GD, _, GD, _, _, _],
+    [_, legOff >= 0 ? GD : _, GD, _, GD, legOff > 0 ? GD : _, _, _],
+    [_, _, GD, _, GD, _, _, _],
+  ];
+}
+
+function makeSpotyRight(frame: number): SpriteFrame {
+  const legOff = frame === 1 ? -1 : frame === 2 ? 1 : 0;
+  return [
+    [_, _, _, H, H, H, _, _],
+    [_, _, H, H, H, H, H, _],
+    [_, _, _, S, S, S, SG, _],
+    [_, _, _, S, S, S, D, _],
+    [_, _, _, _, S, S, _, _],
+    [_, _, _, GU, GU, GU, GU, _],
+    [_, _, GU, GU, GU, GU, GU, _],
+    [_, _, _, GU, GU, GU, GU, GD],
+    [_, _, _, _, GU, GD, GD, _],
+    [_, _, _, GD, _, GD, _, _],
+    [_, _, legOff > 0 ? GD : _, GD, _, GD, legOff >= 0 ? GD : _, _],
+    [_, _, _, GD, _, GD, _, _],
+  ];
+}
+
+/** Spoty dance frames — body sway/bob while facing up at console */
+function makeSpotyDance(frame: number): SpriteFrame {
+  // 4-frame cycle: neutral, lean left, neutral, lean right
+  const leanOffset = frame === 1 ? -1 : frame === 3 ? 1 : 0;
+  const bobUp = frame === 1 || frame === 3;
+  const headY = bobUp ? -1 : 0;
+  // Construct a "facing up" frame with lateral sway
+  if (leanOffset === -1) {
+    // Lean left
+    return [
+      [_, H, H, H, H, _, _, _],
+      [H, H, H, H, H, H, _, _],
+      [SG, H, H, H, H, SG, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, _, H, H, _, _, _, _],
+      [GU, GU, GU, GU, GU, _, _, _],
+      [GU, GU, GU, GU, GU, GU, _, _],
+      [GD, GU, GU, GU, GU, GD, _, _],
+      [_, GD, GU, GU, GD, _, _, _],
+      [_, GD, _, _, GD, _, _, _],
+      [_, GD, _, _, GD, _, _, _],
+      [_, GD, _, _, GD, _, _, _],
+    ];
+  } else if (leanOffset === 1) {
+    // Lean right
+    return [
+      [_, _, _, H, H, H, H, _],
+      [_, _, H, H, H, H, H, H],
+      [_, _, SG, H, H, H, H, SG],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, _, H, H, _, _],
+      [_, _, _, GU, GU, GU, GU, GU],
+      [_, _, GU, GU, GU, GU, GU, GU],
+      [_, _, GD, GU, GU, GU, GU, GD],
+      [_, _, _, GD, GU, GU, GD, _],
+      [_, _, _, GD, _, _, GD, _],
+      [_, _, _, GD, _, _, GD, _],
+      [_, _, _, GD, _, _, GD, _],
+    ];
+  }
+  // Neutral (same as up frame 0 but standing still)
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, SG, H, H, H, H, SG, _],
+    [_, H, H, H, H, H, H, _],
+    [_, _, H, H, H, H, _, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GD, GU, GU, GU, GU, GD, _],
+    [_, _, GD, GU, GU, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+  ];
+}
+
 // --- Calvin (Captain, Gold with pip insignia) ---
 const CU = COLORS.uniformGold;
 const CD = COLORS.uniformGoldDark;
@@ -451,6 +586,10 @@ export const SPRITES: Record<CharacterName, CharacterSprites> = {
   glass: { walk: buildSpriteSet(makeGlassDown, makeGlassUp, makeGlassLeft, makeGlassRight) },
   fizban: { walk: buildSpriteSet(makeFizbanDown, makeFizbanUp, makeFizbanLeft, makeFizbanRight) },
   jasper: { walk: buildSpriteSet(makeJasperDown, makeJasperUp, makeJasperLeft, makeJasperRight) },
+  spoty: {
+    walk: buildSpriteSet(makeSpotyDown, makeSpotyUp, makeSpotyLeft, makeSpotyRight),
+    dance: [makeSpotyDance(0), makeSpotyDance(1), makeSpotyDance(2), makeSpotyDance(3)],
+  },
   calvin: {
     walk: buildSpriteSet(makeCalvinDown, makeCalvinUp, makeCalvinLeft, makeCalvinRight),
     seated: calvinSeated,
@@ -480,12 +619,16 @@ export function getSpriteFrame(
   direction: Direction,
   frame: number,
   seated?: boolean,
+  dancing?: boolean,
 ): SpriteFrame {
   // Try main sprites first
   const mainSprites = SPRITES[name as CharacterName];
   if (mainSprites) {
     if (seated && mainSprites.seated) {
       return mainSprites.seated;
+    }
+    if (dancing && mainSprites.dance) {
+      return mainSprites.dance[frame % mainSprites.dance.length];
     }
     return mainSprites.walk[direction][frame % 3];
   }

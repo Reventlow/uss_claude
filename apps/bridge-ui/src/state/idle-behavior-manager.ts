@@ -341,11 +341,13 @@ export function tickIdleBehavior(
   }
 
   // Check if all officers are in a state that allows idle events
+  // DANCING counts as "idle enough" for the purpose of allowing others to have idle events
   const allIdle = [...officers.values()].every(
     (o) =>
       o.state === OfficerState.IDLE ||
       o.state === OfficerState.WANDERING ||
-      o.state === OfficerState.GOSSIPING,
+      o.state === OfficerState.GOSSIPING ||
+      o.state === OfficerState.DANCING,
   );
 
   if (!allIdle) return result;
@@ -363,6 +365,7 @@ export function tickIdleBehavior(
           o.state === OfficerState.IDLE ||
           o.state === OfficerState.WANDERING ||
           o.state === OfficerState.GOSSIPING,
+        // Exclude DANCING officers (e.g. Spoty) from pun selection
       )
       .map(([name]) => name);
 

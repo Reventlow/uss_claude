@@ -11,9 +11,10 @@ const CANVAS_W = GRID.WIDTH * GRID.PIXEL_SIZE;
 const CANVAS_H = GRID.HEIGHT * GRID.PIXEL_SIZE;
 
 const CHARACTER_TOOLTIPS: Record<string, string> = {
-  glass: "GLASS \u2014 Comms Officer",
+  glass: "GLASS \u2014 Tactical Officer",
   fizban: "FIZBAN \u2014 Science Officer",
   jasper: "JASPER \u2014 Ops Officer",
+  spoty: "SPOTY \u2014 Comms Officer",
   calvin: "CALVIN \u2014 Captain",
   dorte: "HR DORTE \u2014 HR Director",
 };

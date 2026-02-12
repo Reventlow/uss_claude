@@ -78,11 +78,15 @@ const JASPER_REPORTS: string[] = [
   "Shift reports compiled and forwarded, sir.",
 ];
 
+/** SPOTY — Comms officer (Spotify monitor, doesn't report via MCP) */
+const SPOTY_REPORTS: string[] = [];
+
 /** Map of officer names to their report lines */
 const REPORT_LINES: Record<OfficerName, string[]> = {
   glass: GLASS_REPORTS,
   fizban: FIZBAN_REPORTS,
   jasper: JASPER_REPORTS,
+  spoty: SPOTY_REPORTS,
 };
 
 /** Get a random report line for the given officer */

@@ -1,5 +1,5 @@
-/** Names of the three MCP officer characters */
-export type OfficerName = "glass" | "fizban" | "jasper";
+/** Names of the MCP officer characters */
+export type OfficerName = "glass" | "fizban" | "jasper" | "spoty";
 
 /** All character names including captain and HR */
 export type CharacterName = OfficerName | "calvin" | "dorte";
@@ -8,7 +8,7 @@ export type CharacterName = OfficerName | "calvin" | "dorte";
 export type DivisionColor = "gold" | "blue" | "red-orange" | "gray";
 
 /** Officer role on the bridge */
-export type OfficerRole = "comms" | "science" | "ops";
+export type OfficerRole = "comms" | "science" | "ops" | "tactical";
 
 /** Configuration for each officer */
 export interface OfficerConfig {
@@ -49,6 +49,8 @@ export enum OfficerState {
   GOSSIPING = "gossiping",
   /** Scattering when Dorte arrives */
   SCATTERING = "scattering",
+  /** Dancing at station (Spoty reacting to music) */
+  DANCING = "dancing",
 }
 
 /** Captain Calvin behavioral states */

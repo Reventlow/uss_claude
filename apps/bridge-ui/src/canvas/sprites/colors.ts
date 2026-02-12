@@ -42,6 +42,9 @@ export const COLORS = {
   // Captain insignia
   captainPip: "#FFFFFF",
 
+  // Spotify accent
+  spotifyGreen: "#1DB954",
+
   // Speech bubbles
   bubbleBg: "#FFFFFF",
   bubbleBorder: "#000000",

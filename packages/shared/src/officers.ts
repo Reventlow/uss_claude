@@ -11,7 +11,7 @@ export const OFFICER_REGISTRY: ReadonlyMap<OfficerName, OfficerConfig> = new Map
     {
       name: "glass",
       displayName: "GLASS",
-      role: "comms",
+      role: "tactical",
       division: "gold",
       mcpPrefixes: ["mcp__glass__"],
       stationPosition: POSITIONS.GLASS_STATION,
@@ -40,6 +40,18 @@ export const OFFICER_REGISTRY: ReadonlyMap<OfficerName, OfficerConfig> = new Map
       mcpPrefixes: ["mcp__jasper__", "mcp__protonmail__"],
       stationPosition: POSITIONS.JASPER_STATION,
       idlePosition: POSITIONS.JASPER_IDLE,
+    },
+  ],
+  [
+    "spoty",
+    {
+      name: "spoty",
+      displayName: "SPOTY",
+      role: "comms",
+      division: "gold",
+      mcpPrefixes: [],
+      stationPosition: POSITIONS.SPOTY_STATION,
+      idlePosition: POSITIONS.SPOTY_IDLE,
     },
   ],
 ]);

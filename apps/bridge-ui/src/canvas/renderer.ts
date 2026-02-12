@@ -1,10 +1,11 @@
-import { GRID, type CharacterRenderState } from "@uss-claude/shared";
+import { GRID, OfficerState, type CharacterRenderState } from "@uss-claude/shared";
 import type { BridgeState } from "../state/bridge-state.js";
 import { drawBackground } from "./layers/background.js";
 import { drawViewscreen } from "./layers/viewscreen.js";
-import { drawCharacters } from "./layers/characters.js";
+import { drawCharacters, setDancingOfficers } from "./layers/characters.js";
 import { drawSpeechBubbles } from "./layers/speech-bubbles.js";
 import { drawEffects } from "./layers/effects.js";
+import { drawSongTicker } from "./layers/song-ticker.js";
 
 const CANVAS_W = GRID.WIDTH * GRID.PIXEL_SIZE;
 const CANVAS_H = GRID.HEIGHT * GRID.PIXEL_SIZE;
@@ -47,6 +48,15 @@ export function renderFrame(
   // Layer 2: Viewscreen
   drawViewscreen(ctx, state.atmosphere, deltaMs);
 
+  // Inform character renderer which officers are dancing
+  const dancing = new Set<string>();
+  for (const [name, officer] of state.officers) {
+    if (officer.state === OfficerState.DANCING) {
+      dancing.add(name);
+    }
+  }
+  setDancingOfficers(dancing);
+
   // Layer 3: Characters (Y-sorted)
   const characters = collectCharacters(state);
   drawCharacters(ctx, characters, state.calvin.state);
@@ -54,7 +64,10 @@ export function renderFrame(
   // Layer 4: Speech bubbles
   drawSpeechBubbles(ctx, characters);
 
-  // Layer 5: CRT effects
+  // Layer 5: Song ticker
+  drawSongTicker(ctx, state.currentTrack);
+
+  // Layer 6: CRT effects
   drawEffects(ctx, state.atmosphere);
 }
 

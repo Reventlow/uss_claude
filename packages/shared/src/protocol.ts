@@ -32,6 +32,17 @@ export interface SystemIdleMessage {
   timestamp: number;
 }
 
+/** Spotify track event from the spoty-daemon */
+export type TrackAction = "playing" | "changed" | "stopped";
+
+export interface TrackEventMessage {
+  type: "track_event";
+  action: TrackAction;
+  artist?: string;
+  title?: string;
+  timestamp: number;
+}
+
 /** Status broadcast from server to bridge clients */
 export interface StatusMessage {
   type: "status";
@@ -56,10 +67,11 @@ export type IngestMessage =
   | McpEventMessage
   | HeartbeatMessage
   | DisconnectMessage
-  | SystemIdleMessage;
+  | SystemIdleMessage
+  | TrackEventMessage;
 
 /** All messages from server to bridge clients */
-export type BridgeMessage = McpEventMessage | StatusMessage | BridgePongMessage;
+export type BridgeMessage = McpEventMessage | StatusMessage | BridgePongMessage | TrackEventMessage;
 
 /** All wire messages */
 export type WireMessage = IngestMessage | BridgeMessage | BridgePingMessage;
@@ -82,12 +94,16 @@ export function isSystemIdle(msg: unknown): msg is SystemIdleMessage {
   return isObject(msg) && msg.type === "system_idle";
 }
 
+export function isTrackEvent(msg: unknown): msg is TrackEventMessage {
+  return isObject(msg) && msg.type === "track_event";
+}
+
 export function isStatusMessage(msg: unknown): msg is StatusMessage {
   return isObject(msg) && msg.type === "status";
 }
 
 export function isIngestMessage(msg: unknown): msg is IngestMessage {
-  return isMcpEvent(msg) || isHeartbeat(msg) || isDisconnect(msg) || isSystemIdle(msg);
+  return isMcpEvent(msg) || isHeartbeat(msg) || isDisconnect(msg) || isSystemIdle(msg) || isTrackEvent(msg);
 }
 
 export function isBridgePing(msg: unknown): msg is BridgePingMessage {
@@ -99,7 +115,7 @@ export function isBridgePong(msg: unknown): msg is BridgePongMessage {
 }
 
 export function isBridgeMessage(msg: unknown): msg is BridgeMessage {
-  return isMcpEvent(msg) || isStatusMessage(msg) || isBridgePong(msg);
+  return isMcpEvent(msg) || isStatusMessage(msg) || isBridgePong(msg) || isTrackEvent(msg);
 }
 
 function isObject(val: unknown): val is Record<string, unknown> {

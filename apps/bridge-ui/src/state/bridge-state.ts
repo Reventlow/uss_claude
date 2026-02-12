@@ -6,6 +6,7 @@ import {
   type BridgeStatus,
   type McpEventMessage,
   type StatusMessage,
+  type TrackEventMessage,
   POSITIONS,
   CAPTAIN_PING,
   TIMING,
@@ -56,6 +57,8 @@ export interface BridgeState {
   missedPings: number;
   /** Whether we're waiting for a pong (ping sent but no pong yet) */
   awaitingPong: boolean;
+  /** Currently playing Spotify track (null if nothing playing) */
+  currentTrack: { artist: string; title: string } | null;
 }
 
 /** All actions the reducer handles */
@@ -72,7 +75,10 @@ export type BridgeAction =
   | { type: "DEBUG_OFFICER_DONE"; officer: OfficerName }
   | { type: "DEBUG_CONNECT_LAPTOP" }
   | { type: "DEBUG_DISCONNECT_LAPTOP" }
-  | { type: "DEBUG_TRIGGER_CAMEO" };
+  | { type: "DEBUG_TRIGGER_CAMEO" }
+  | { type: "TRACK_EVENT"; payload: TrackEventMessage }
+  | { type: "DEBUG_TRACK_PLAY" }
+  | { type: "DEBUG_TRACK_STOP" };
 
 /** Create initial bridge state */
 export function createInitialState(): BridgeState {
@@ -98,6 +104,7 @@ export function createInitialState(): BridgeState {
     logIdCounter: 0,
     missedPings: 0,
     awaitingPong: false,
+    currentTrack: null,
   };
 }
 
@@ -142,8 +149,44 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
       break;
 
     case "STATUS_UPDATE": {
+      const prevLaptop = next.bridgeStatus.laptopConnected;
       next.bridgeStatus = action.payload.status;
       next.atmosphere = computeAtmosphere(next.connected, action.payload.status);
+
+      // Calvin's presence tracks laptop connectivity
+      if (action.payload.status.laptopConnected && !prevLaptop) {
+        // Laptop just connected — captain enters
+        if (next.calvin.state === CalvinState.OFF_BRIDGE) {
+          calvinEnter(next.calvin);
+          setCaptainPresence(next.idleBehavior, true);
+          addLogEntry(next, "Captain Calvin has entered the bridge.");
+
+          for (const [, officer] of next.officers) {
+            if (
+              officer.state === OfficerState.WANDERING ||
+              officer.state === OfficerState.GOSSIPING
+            ) {
+              officer.state = OfficerState.WALKING_TO_IDLE;
+            }
+          }
+        }
+      } else if (!action.payload.status.laptopConnected && prevLaptop) {
+        // Laptop disconnected — captain leaves
+        if (
+          next.calvin.state !== CalvinState.OFF_BRIDGE &&
+          next.calvin.state !== CalvinState.LEAVING
+        ) {
+          calvinLeave(next.calvin);
+          setCaptainPresence(next.idleBehavior, false);
+          addLogEntry(next, "Captain Calvin has left the bridge.");
+
+          for (const [, officer] of next.officers) {
+            if (officer.state === OfficerState.IDLE) {
+              officer.state = OfficerState.WANDERING;
+            }
+          }
+        }
+      }
       break;
     }
 
@@ -178,8 +221,8 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
       next.awaitingPong = false;
       next.missedPings = 0;
 
-      // Captain enters on successful pong (if not already on bridge)
-      if (next.calvin.state === CalvinState.OFF_BRIDGE) {
+      // Captain enters on successful pong only if laptop is actually connected
+      if (next.calvin.state === CalvinState.OFF_BRIDGE && next.bridgeStatus.laptopConnected) {
         calvinEnter(next.calvin);
         setCaptainPresence(next.idleBehavior, true);
         addLogEntry(next, "Captain Calvin has entered the bridge.");
@@ -256,6 +299,8 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
       // Tick all officers
       for (const [name, officer] of next.officers) {
         const config = getOfficer(name);
+        const prevState = officer.state;
+
         tickOfficer(
           officer,
           action.deltaMs,
@@ -264,8 +309,24 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
           config.idlePosition,
         );
 
+        // Spoty override: transition to DANCING instead of WORKING when reaching station
+        if (name === "spoty" && prevState === OfficerState.WALKING_TO_STATION && officer.state === OfficerState.WORKING) {
+          officer.state = OfficerState.DANCING;
+          officer.danceTimer = 0;
+          officer.render.animFrame = 0;
+          officer.render.direction = "up";
+        }
+
+        // Spoty recovery: if idle but track is playing, re-dispatch to station
+        if (name === "spoty" && officer.state === OfficerState.IDLE && next.currentTrack !== null) {
+          officer.state = OfficerState.WALKING_TO_STATION;
+          officer.stuckTimer = 0;
+        }
+
         // Auto-recover stuck officers (no "done" event received)
+        // Skip stuck timeout for DANCING officers (they stay until track stops)
         if (
+          officer.state !== OfficerState.DANCING &&
           officer.stuckTimer >= TIMING.STUCK_TIMEOUT &&
           (officer.state === OfficerState.WALKING_TO_STATION ||
            officer.state === OfficerState.WORKING)
@@ -346,6 +407,62 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
         addLogEntry(next, "[DEBUG] Cameo event triggered.");
       }
       break;
+
+    case "TRACK_EVENT": {
+      const spotyFsm = next.officers.get("spoty");
+      if (!spotyFsm) break;
+
+      if (action.payload.action === "playing" || action.payload.action === "changed") {
+        next.currentTrack = {
+          artist: action.payload.artist ?? "Unknown",
+          title: action.payload.title ?? "Unknown",
+        };
+        // Spoty walks to station if not already there/dancing
+        if (
+          spotyFsm.state === OfficerState.IDLE ||
+          spotyFsm.state === OfficerState.WANDERING ||
+          spotyFsm.state === OfficerState.GOSSIPING ||
+          spotyFsm.state === OfficerState.WALKING_TO_IDLE
+        ) {
+          spotyFsm.state = OfficerState.WALKING_TO_STATION;
+          spotyFsm.stuckTimer = 0;
+        }
+        addLogEntry(next, `SPOTY: Now playing — ${next.currentTrack.artist} - ${next.currentTrack.title}`);
+      } else if (action.payload.action === "stopped") {
+        next.currentTrack = null;
+        // Spoty walks back to idle
+        if (
+          spotyFsm.state === OfficerState.DANCING ||
+          spotyFsm.state === OfficerState.WORKING ||
+          spotyFsm.state === OfficerState.WALKING_TO_STATION
+        ) {
+          spotyFsm.state = OfficerState.WALKING_TO_IDLE;
+          spotyFsm.danceTimer = 0;
+        }
+        addLogEntry(next, "SPOTY: Playback stopped.");
+      }
+      break;
+    }
+
+    case "DEBUG_TRACK_PLAY": {
+      const debugTrack: TrackEventMessage = {
+        type: "track_event",
+        action: "playing",
+        artist: "Daft Punk",
+        title: "Around The World",
+        timestamp: Date.now(),
+      };
+      return bridgeReducer(next, { type: "TRACK_EVENT", payload: debugTrack });
+    }
+
+    case "DEBUG_TRACK_STOP": {
+      const debugStop: TrackEventMessage = {
+        type: "track_event",
+        action: "stopped",
+        timestamp: Date.now(),
+      };
+      return bridgeReducer(next, { type: "TRACK_EVENT", payload: debugStop });
+    }
   }
 
   return next;

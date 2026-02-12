@@ -43,11 +43,18 @@ export const WALL_RECTS: Rect[] = [
 /** Station consoles */
 export const STATIONS: StationRect[] = [
   {
+    x: POSITIONS.SPOTY_STATION.x - 8,
+    y: POSITIONS.SPOTY_STATION.y - 4,
+    w: 16,
+    h: 8,
+    label: "COMMS",
+  },
+  {
     x: POSITIONS.GLASS_STATION.x - 8,
     y: POSITIONS.GLASS_STATION.y - 4,
     w: 16,
     h: 8,
-    label: "COMMS",
+    label: "TAC",
   },
   {
     x: POSITIONS.FIZBAN_STATION.x - 8,

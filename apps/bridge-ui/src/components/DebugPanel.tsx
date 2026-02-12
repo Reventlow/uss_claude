@@ -89,6 +89,21 @@ export function DebugPanel({ dispatch }: DebugPanelProps) {
               onClick={() => dispatch({ type: "DEBUG_TRIGGER_CAMEO" })}
             />
           </div>
+
+          {/* Separator */}
+          <div style={{ borderTop: "1px solid #333", margin: "2px 0" }} />
+
+          {/* Spotify controls */}
+          <div style={{ display: "flex", gap: 4 }}>
+            <DebugButton
+              label="PLAY TRACK"
+              onClick={() => dispatch({ type: "DEBUG_TRACK_PLAY" })}
+            />
+            <DebugButton
+              label="STOP TRACK"
+              onClick={() => dispatch({ type: "DEBUG_TRACK_STOP" })}
+            />
+          </div>
         </div>
       )}
     </div>
