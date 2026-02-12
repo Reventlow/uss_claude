@@ -43,6 +43,15 @@ export interface TrackEventMessage {
   timestamp: number;
 }
 
+/** Disco mode event (chart-topping track detected) */
+export interface DiscoEventMessage {
+  type: "disco_event";
+  action: "start" | "stop";
+  artist?: string;
+  title?: string;
+  timestamp: number;
+}
+
 /** Status broadcast from server to bridge clients */
 export interface StatusMessage {
   type: "status";
@@ -71,7 +80,7 @@ export type IngestMessage =
   | TrackEventMessage;
 
 /** All messages from server to bridge clients */
-export type BridgeMessage = McpEventMessage | StatusMessage | BridgePongMessage | TrackEventMessage;
+export type BridgeMessage = McpEventMessage | StatusMessage | BridgePongMessage | TrackEventMessage | DiscoEventMessage;
 
 /** All wire messages */
 export type WireMessage = IngestMessage | BridgeMessage | BridgePingMessage;
@@ -98,6 +107,10 @@ export function isTrackEvent(msg: unknown): msg is TrackEventMessage {
   return isObject(msg) && msg.type === "track_event";
 }
 
+export function isDiscoEvent(msg: unknown): msg is DiscoEventMessage {
+  return isObject(msg) && msg.type === "disco_event";
+}
+
 export function isStatusMessage(msg: unknown): msg is StatusMessage {
   return isObject(msg) && msg.type === "status";
 }
@@ -115,7 +128,7 @@ export function isBridgePong(msg: unknown): msg is BridgePongMessage {
 }
 
 export function isBridgeMessage(msg: unknown): msg is BridgeMessage {
-  return isMcpEvent(msg) || isStatusMessage(msg) || isBridgePong(msg) || isTrackEvent(msg);
+  return isMcpEvent(msg) || isStatusMessage(msg) || isBridgePong(msg) || isTrackEvent(msg) || isDiscoEvent(msg);
 }
 
 function isObject(val: unknown): val is Record<string, unknown> {

@@ -1,7 +1,8 @@
 import { WebSocket } from "ws";
 import type { IncomingMessage } from "node:http";
-import { parseMessage, isMcpEvent, isHeartbeat, isDisconnect, isSystemIdle, isTrackEvent } from "@uss-claude/shared";
-import type { McpEventMessage, TrackEventMessage } from "@uss-claude/shared";
+import { parseMessage, isMcpEvent, isHeartbeat, isDisconnect, isSystemIdle, isTrackEvent, TIMING } from "@uss-claude/shared";
+import type { McpEventMessage, TrackEventMessage, DiscoEventMessage } from "@uss-claude/shared";
+import { isTrackTrending } from "./chart-fetcher.js";
 import type { StateTracker } from "./state-tracker.js";
 import type { BridgeHandler } from "./bridge-handler.js";
 import { logger } from "./logger.js";
@@ -17,6 +18,8 @@ export class IngestHandler {
   private bridgeToken: string;
   private stateTracker: StateTracker;
   private bridgeHandler: BridgeHandler;
+  private discoTimer: ReturnType<typeof setTimeout> | null = null;
+  private discoActive = false;
 
   constructor(bridgeToken: string, stateTracker: StateTracker, bridgeHandler: BridgeHandler) {
     this.bridgeToken = bridgeToken;
@@ -68,8 +71,13 @@ export class IngestHandler {
         // Forward MCP events to bridge clients
         this.bridgeHandler.broadcast(msg as McpEventMessage);
       } else if (isTrackEvent(msg)) {
+        const trackMsg = msg as TrackEventMessage;
         // Forward track events to bridge clients (don't affect Claude active/idle state)
-        this.bridgeHandler.broadcast(msg as TrackEventMessage);
+        this.bridgeHandler.broadcast(trackMsg);
+        // Check for disco trigger
+        if ((trackMsg.action === "playing" || trackMsg.action === "changed") && trackMsg.artist && trackMsg.title) {
+          void this.checkDiscoTrigger(trackMsg.artist, trackMsg.title);
+        }
       } else if (isHeartbeat(msg)) {
         this.stateTracker.onHeartbeat();
       } else if (isDisconnect(msg)) {
@@ -98,6 +106,41 @@ export class IngestHandler {
     ws.on("error", (err) => {
       logger.error("ingest", `Ingest client error (${clientName})`, { error: err.message });
     });
+  }
+
+  /** Check if a track is trending and trigger disco mode */
+  private async checkDiscoTrigger(artist: string, title: string): Promise<void> {
+    if (this.discoActive) return;
+
+    const trending = await isTrackTrending(artist, title);
+    if (!trending) return;
+
+    this.discoActive = true;
+    logger.info("disco", `Chart-topping hit detected: ${artist} - ${title}! Initiating disco protocol!`);
+
+    const startMsg: DiscoEventMessage = {
+      type: "disco_event",
+      action: "start",
+      artist,
+      title,
+      timestamp: Date.now(),
+    };
+    this.bridgeHandler.broadcast(startMsg);
+
+    // Clear previous timer if any
+    if (this.discoTimer) clearTimeout(this.discoTimer);
+
+    this.discoTimer = setTimeout(() => {
+      const stopMsg: DiscoEventMessage = {
+        type: "disco_event",
+        action: "stop",
+        timestamp: Date.now(),
+      };
+      this.bridgeHandler.broadcast(stopMsg);
+      this.discoActive = false;
+      this.discoTimer = null;
+      logger.info("disco", "Disco protocol complete. Resuming normal operations.");
+    }, TIMING.DISCO_TOTAL_DURATION);
   }
 
   /** Whether the main ingest client (hook-cli) is currently connected */

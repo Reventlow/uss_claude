@@ -1,4 +1,4 @@
-import { GRID, OfficerState, type CharacterRenderState } from "@uss-claude/shared";
+import { GRID, OfficerState, DiscoState, TIMING, type CharacterRenderState } from "@uss-claude/shared";
 import type { BridgeState } from "../state/bridge-state.js";
 import { drawBackground } from "./layers/background.js";
 import { drawViewscreen } from "./layers/viewscreen.js";
@@ -6,6 +6,8 @@ import { drawCharacters, setDancingOfficers } from "./layers/characters.js";
 import { drawSpeechBubbles } from "./layers/speech-bubbles.js";
 import { drawEffects } from "./layers/effects.js";
 import { drawSongTicker } from "./layers/song-ticker.js";
+import { drawDiscoBall } from "./layers/disco-ball.js";
+import { drawDiscoTitle } from "./layers/disco-title.js";
 
 const CANVAS_W = GRID.WIDTH * GRID.PIXEL_SIZE;
 const CANVAS_H = GRID.HEIGHT * GRID.PIXEL_SIZE;
@@ -55,17 +57,40 @@ export function renderFrame(
       dancing.add(name);
     }
   }
+  // During disco, Calvin and Dorte also dance
+  if (state.disco.state === DiscoState.DANCING) {
+    dancing.add("calvin");
+    dancing.add("dorte");
+  }
   setDancingOfficers(dancing);
 
   // Layer 3: Characters (Y-sorted)
   const characters = collectCharacters(state);
   drawCharacters(ctx, characters, state.calvin.state);
 
-  // Layer 4: Speech bubbles
-  drawSpeechBubbles(ctx, characters);
+  // Layer 3.5: Disco ball
+  const discoState = state.disco.state;
+  const isDiscoDancing = discoState !== DiscoState.INACTIVE;
+  if (isDiscoDancing) {
+    let maxTimer: number;
+    switch (discoState) {
+      case DiscoState.DROPPING_BALL: maxTimer = TIMING.DISCO_BALL_DROP_DURATION; break;
+      case DiscoState.DANCING: maxTimer = TIMING.DISCO_DANCE_DURATION; break;
+      case DiscoState.RAISING_BALL: maxTimer = TIMING.DISCO_BALL_RAISE_DURATION; break;
+      default: maxTimer = 1;
+    }
+    drawDiscoBall(ctx, discoState, state.disco.timer, maxTimer, deltaMs);
+  }
 
-  // Layer 5: Song ticker
-  drawSongTicker(ctx, state.currentTrack);
+  // Layer 4: Speech bubbles
+  drawSpeechBubbles(ctx, characters, discoState === DiscoState.DANCING);
+
+  // Layer 5: Song ticker / disco title
+  if (isDiscoDancing) {
+    drawDiscoTitle(ctx, discoState, state.disco.song);
+  } else {
+    drawSongTicker(ctx, state.currentTrack);
+  }
 
   // Layer 6: CRT effects
   drawEffects(ctx, state.atmosphere);

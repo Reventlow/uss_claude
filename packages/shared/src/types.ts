@@ -79,6 +79,18 @@ export enum DorteState {
   LEAVING = "leaving",
 }
 
+/** Disco mode phase states */
+export enum DiscoState {
+  /** No disco happening */
+  INACTIVE = "inactive",
+  /** Ball descending from ceiling (~2s) */
+  DROPPING_BALL = "dropping_ball",
+  /** Everyone dances (~25s) */
+  DANCING = "dancing",
+  /** Ball ascending back up (~3s) */
+  RAISING_BALL = "raising_ball",
+}
+
 /** Cameo event phase states */
 export enum CameoState {
   INACTIVE = "inactive",

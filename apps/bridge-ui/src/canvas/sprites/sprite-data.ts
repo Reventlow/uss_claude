@@ -394,6 +394,156 @@ function makeSpotyDance(frame: number): SpriteFrame {
   ];
 }
 
+/** Glass dance frames — body sway/bob while facing up */
+function makeGlassDance(frame: number): SpriteFrame {
+  const leanOffset = frame === 1 ? -1 : frame === 3 ? 1 : 0;
+  if (leanOffset === -1) {
+    return [
+      [_, H, H, H, H, _, _, _],
+      [H, H, H, H, H, H, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, _, H, H, _, _, _, _],
+      [GU, GU, GU, GU, GU, _, _, _],
+      [GU, GU, GU, GU, GU, GU, _, _],
+      [GD, GU, GU, GU, GU, GD, _, _],
+      [_, GD, GU, GU, GD, _, _, _],
+      [_, GD, _, _, GD, _, _, _],
+      [_, GD, _, _, GD, _, _, _],
+      [_, GD, _, _, GD, _, _, _],
+    ];
+  } else if (leanOffset === 1) {
+    return [
+      [_, _, _, H, H, H, H, _],
+      [_, _, H, H, H, H, H, H],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, _, H, H, _, _],
+      [_, _, _, GU, GU, GU, GU, GU],
+      [_, _, GU, GU, GU, GU, GU, GU],
+      [_, _, GD, GU, GU, GU, GU, GD],
+      [_, _, _, GD, GU, GU, GD, _],
+      [_, _, _, GD, _, _, GD, _],
+      [_, _, _, GD, _, _, GD, _],
+      [_, _, _, GD, _, _, GD, _],
+    ];
+  }
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, _, H, H, H, H, _, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GU, GU, GU, GU, GU, GU, _],
+    [_, GD, GU, GU, GU, GU, GD, _],
+    [_, _, GD, GU, GU, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+    [_, _, GD, _, _, GD, _, _],
+  ];
+}
+
+/** Fizban dance frames — body sway/bob while facing up */
+function makeFizbanDance(frame: number): SpriteFrame {
+  const leanOffset = frame === 1 ? -1 : frame === 3 ? 1 : 0;
+  if (leanOffset === -1) {
+    return [
+      [_, H, H, H, H, _, _, _],
+      [H, H, H, H, H, H, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, _, H, H, _, _, _, _],
+      [BU, BU, BU, BU, BU, _, _, _],
+      [BU, BU, BU, BU, BU, BU, _, _],
+      [BD, BU, BU, BU, BU, BD, _, _],
+      [_, BD, BU, BU, BD, _, _, _],
+      [_, BD, _, _, BD, _, _, _],
+      [_, BD, _, _, BD, _, _, _],
+      [_, BD, _, _, BD, _, _, _],
+    ];
+  } else if (leanOffset === 1) {
+    return [
+      [_, _, _, H, H, H, H, _],
+      [_, _, H, H, H, H, H, H],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, _, H, H, _, _],
+      [_, _, _, BU, BU, BU, BU, BU],
+      [_, _, BU, BU, BU, BU, BU, BU],
+      [_, _, BD, BU, BU, BU, BU, BD],
+      [_, _, _, BD, BU, BU, BD, _],
+      [_, _, _, BD, _, _, BD, _],
+      [_, _, _, BD, _, _, BD, _],
+      [_, _, _, BD, _, _, BD, _],
+    ];
+  }
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, _, H, H, H, H, _, _],
+    [_, BU, BU, BU, BU, BU, BU, _],
+    [_, BU, BU, BU, BU, BU, BU, _],
+    [_, BD, BU, BU, BU, BU, BD, _],
+    [_, _, BD, BU, BU, BD, _, _],
+    [_, _, BD, _, _, BD, _, _],
+    [_, _, BD, _, _, BD, _, _],
+    [_, _, BD, _, _, BD, _, _],
+  ];
+}
+
+/** Jasper dance frames — body sway/bob while facing up */
+function makeJasperDance(frame: number): SpriteFrame {
+  const leanOffset = frame === 1 ? -1 : frame === 3 ? 1 : 0;
+  if (leanOffset === -1) {
+    return [
+      [_, H, H, H, H, _, _, _],
+      [H, H, H, H, H, H, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, _, H, H, _, _, _, _],
+      [RU, RU, RU, RU, RU, _, _, _],
+      [RU, RU, RU, RU, RU, RU, _, _],
+      [RD, RU, RU, RU, RU, RD, _, _],
+      [_, RD, RU, RU, RD, _, _, _],
+      [_, RD, _, _, RD, _, _, _],
+      [_, RD, _, _, RD, _, _, _],
+      [_, RD, _, _, RD, _, _, _],
+    ];
+  } else if (leanOffset === 1) {
+    return [
+      [_, _, _, H, H, H, H, _],
+      [_, _, H, H, H, H, H, H],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, _, H, H, _, _],
+      [_, _, _, RU, RU, RU, RU, RU],
+      [_, _, RU, RU, RU, RU, RU, RU],
+      [_, _, RD, RU, RU, RU, RU, RD],
+      [_, _, _, RD, RU, RU, RD, _],
+      [_, _, _, RD, _, _, RD, _],
+      [_, _, _, RD, _, _, RD, _],
+      [_, _, _, RD, _, _, RD, _],
+    ];
+  }
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, _, H, H, H, H, _, _],
+    [_, RU, RU, RU, RU, RU, RU, _],
+    [_, RU, RU, RU, RU, RU, RU, _],
+    [_, RD, RU, RU, RU, RU, RD, _],
+    [_, _, RD, RU, RU, RD, _, _],
+    [_, _, RD, _, _, RD, _, _],
+    [_, _, RD, _, _, RD, _, _],
+    [_, _, RD, _, _, RD, _, _],
+  ];
+}
+
 // --- Calvin (Captain, Gold with pip insignia) ---
 const CU = COLORS.uniformGold;
 const CD = COLORS.uniformGoldDark;
@@ -489,6 +639,56 @@ const calvinSeated: SpriteFrame = [
   [_, _, CD, _, _, CD, _, _],
 ];
 
+/** Calvin dance frames — body sway/bob while facing up, with captain pips */
+function makeCalvinDance(frame: number): SpriteFrame {
+  const leanOffset = frame === 1 ? -1 : frame === 3 ? 1 : 0;
+  if (leanOffset === -1) {
+    return [
+      [_, H, H, H, H, _, _, _],
+      [H, H, H, H, H, H, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, _, H, H, _, _, _, _],
+      [CU, CP, CU, CU, CP, _, _, _],
+      [CU, CU, CU, CU, CU, CU, _, _],
+      [CD, CU, CU, CU, CU, CD, _, _],
+      [_, CD, CU, CU, CD, _, _, _],
+      [_, CD, _, _, CD, _, _, _],
+      [_, CD, _, _, CD, _, _, _],
+      [_, CD, _, _, CD, _, _, _],
+    ];
+  } else if (leanOffset === 1) {
+    return [
+      [_, _, _, H, H, H, H, _],
+      [_, _, H, H, H, H, H, H],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, _, H, H, _, _],
+      [_, _, _, CU, CU, CP, CU, CP],
+      [_, _, CU, CU, CU, CU, CU, CU],
+      [_, _, CD, CU, CU, CU, CU, CD],
+      [_, _, _, CD, CU, CU, CD, _],
+      [_, _, _, CD, _, _, CD, _],
+      [_, _, _, CD, _, _, CD, _],
+      [_, _, _, CD, _, _, CD, _],
+    ];
+  }
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, _, H, H, H, H, _, _],
+    [_, CU, CP, CU, CU, CP, CU, _],
+    [_, CU, CU, CU, CU, CU, CU, _],
+    [_, CD, CU, CU, CU, CU, CD, _],
+    [_, _, CD, CU, CU, CD, _, _],
+    [_, _, CD, _, _, CD, _, _],
+    [_, _, CD, _, _, CD, _, _],
+    [_, _, CD, _, _, CD, _, _],
+  ];
+}
+
 // --- Dorte (HR, Gray uniform) ---
 const YU = COLORS.uniformGray;
 const YD = COLORS.uniformGrayDark;
@@ -567,6 +767,56 @@ function makeDorteRight(frame: number): SpriteFrame {
   ];
 }
 
+/** Dorte dance frames — body sway/bob while facing up */
+function makeDorteDance(frame: number): SpriteFrame {
+  const leanOffset = frame === 1 ? -1 : frame === 3 ? 1 : 0;
+  if (leanOffset === -1) {
+    return [
+      [_, H, H, H, H, _, _, _],
+      [H, H, H, H, H, H, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, H, H, H, H, _, _, _],
+      [_, _, H, H, _, _, _, _],
+      [YU, YU, YU, YU, YU, _, _, _],
+      [YU, YU, YU, YU, YU, YU, _, _],
+      [YD, YU, YU, YU, YU, YD, _, _],
+      [_, YD, YU, YU, YD, _, _, _],
+      [_, YD, _, _, YD, _, _, _],
+      [_, YD, _, _, YD, _, _, _],
+      [_, YD, _, _, YD, _, _, _],
+    ];
+  } else if (leanOffset === 1) {
+    return [
+      [_, _, _, H, H, H, H, _],
+      [_, _, H, H, H, H, H, H],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, H, H, H, H, _],
+      [_, _, _, _, H, H, _, _],
+      [_, _, _, YU, YU, YU, YU, YU],
+      [_, _, YU, YU, YU, YU, YU, YU],
+      [_, _, YD, YU, YU, YU, YU, YD],
+      [_, _, _, YD, YU, YU, YD, _],
+      [_, _, _, YD, _, _, YD, _],
+      [_, _, _, YD, _, _, YD, _],
+      [_, _, _, YD, _, _, YD, _],
+    ];
+  }
+  return [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, H, H, H, H, H, H, _],
+    [_, _, H, H, H, H, _, _],
+    [_, YU, YU, YU, YU, YU, YU, _],
+    [_, YU, YU, YU, YU, YU, YU, _],
+    [_, YD, YU, YU, YU, YU, YD, _],
+    [_, _, YD, YU, YU, YD, _, _],
+    [_, _, YD, _, _, YD, _, _],
+    [_, _, YD, _, _, YD, _, _],
+    [_, _, YD, _, _, YD, _, _],
+  ];
+}
+
 function buildSpriteSet(
   down: (f: number) => SpriteFrame,
   up: (f: number) => SpriteFrame,
@@ -583,9 +833,18 @@ function buildSpriteSet(
 
 /** All character sprite data, keyed by CharacterName */
 export const SPRITES: Record<CharacterName, CharacterSprites> = {
-  glass: { walk: buildSpriteSet(makeGlassDown, makeGlassUp, makeGlassLeft, makeGlassRight) },
-  fizban: { walk: buildSpriteSet(makeFizbanDown, makeFizbanUp, makeFizbanLeft, makeFizbanRight) },
-  jasper: { walk: buildSpriteSet(makeJasperDown, makeJasperUp, makeJasperLeft, makeJasperRight) },
+  glass: {
+    walk: buildSpriteSet(makeGlassDown, makeGlassUp, makeGlassLeft, makeGlassRight),
+    dance: [makeGlassDance(0), makeGlassDance(1), makeGlassDance(2), makeGlassDance(3)],
+  },
+  fizban: {
+    walk: buildSpriteSet(makeFizbanDown, makeFizbanUp, makeFizbanLeft, makeFizbanRight),
+    dance: [makeFizbanDance(0), makeFizbanDance(1), makeFizbanDance(2), makeFizbanDance(3)],
+  },
+  jasper: {
+    walk: buildSpriteSet(makeJasperDown, makeJasperUp, makeJasperLeft, makeJasperRight),
+    dance: [makeJasperDance(0), makeJasperDance(1), makeJasperDance(2), makeJasperDance(3)],
+  },
   spoty: {
     walk: buildSpriteSet(makeSpotyDown, makeSpotyUp, makeSpotyLeft, makeSpotyRight),
     dance: [makeSpotyDance(0), makeSpotyDance(1), makeSpotyDance(2), makeSpotyDance(3)],
@@ -593,8 +852,12 @@ export const SPRITES: Record<CharacterName, CharacterSprites> = {
   calvin: {
     walk: buildSpriteSet(makeCalvinDown, makeCalvinUp, makeCalvinLeft, makeCalvinRight),
     seated: calvinSeated,
+    dance: [makeCalvinDance(0), makeCalvinDance(1), makeCalvinDance(2), makeCalvinDance(3)],
   },
-  dorte: { walk: buildSpriteSet(makeDorteDown, makeDorteUp, makeDorteLeft, makeDorteRight) },
+  dorte: {
+    walk: buildSpriteSet(makeDorteDown, makeDorteUp, makeDorteLeft, makeDorteRight),
+    dance: [makeDorteDance(0), makeDorteDance(1), makeDorteDance(2), makeDorteDance(3)],
+  },
 };
 
 /** Fallback magenta silhouette for unknown characters */

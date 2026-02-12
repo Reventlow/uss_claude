@@ -1,15 +1,20 @@
 import {
   OfficerState,
   CalvinState,
+  DiscoState,
+  DorteState,
   BridgeAtmosphere,
   type OfficerName,
   type BridgeStatus,
   type McpEventMessage,
   type StatusMessage,
   type TrackEventMessage,
+  type DiscoEventMessage,
   POSITIONS,
   CAPTAIN_PING,
   TIMING,
+  GRID,
+  DISCO_LINES,
   getOfficerNames,
   getOfficer,
   getRandomReport,
@@ -18,6 +23,8 @@ import {
   type OfficerFSM,
   createOfficerFSM,
   tickOfficer,
+  directionTo,
+  moveToward,
 } from "./officer-state-machine.js";
 import {
   type CalvinFSM,
@@ -59,6 +66,15 @@ export interface BridgeState {
   awaitingPong: boolean;
   /** Currently playing Spotify track (null if nothing playing) */
   currentTrack: { artist: string; title: string } | null;
+  /** Disco mode state */
+  disco: {
+    state: DiscoState;
+    timer: number;
+    song: { artist: string; title: string } | null;
+    bubbleTimer: number;
+    /** Saved officer positions+states and Calvin state to restore after disco */
+    savedStates: Map<string, { position: { x: number; y: number }; state: string }> | null;
+  };
 }
 
 /** All actions the reducer handles */
@@ -78,7 +94,9 @@ export type BridgeAction =
   | { type: "DEBUG_TRIGGER_CAMEO" }
   | { type: "TRACK_EVENT"; payload: TrackEventMessage }
   | { type: "DEBUG_TRACK_PLAY" }
-  | { type: "DEBUG_TRACK_STOP" };
+  | { type: "DEBUG_TRACK_STOP" }
+  | { type: "DISCO_EVENT"; payload: DiscoEventMessage }
+  | { type: "DEBUG_DISCO" };
 
 /** Create initial bridge state */
 export function createInitialState(): BridgeState {
@@ -105,6 +123,13 @@ export function createInitialState(): BridgeState {
     missedPings: 0,
     awaitingPong: false,
     currentTrack: null,
+    disco: {
+      state: DiscoState.INACTIVE,
+      timer: 0,
+      song: null,
+      bubbleTimer: 0,
+      savedStates: null,
+    },
   };
 }
 
@@ -358,6 +383,132 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
       for (const msg of idleResult.logMessages) {
         addLogEntry(next, msg);
       }
+
+      // Tick disco mode
+      if (next.disco.state !== DiscoState.INACTIVE) {
+        next.disco.timer -= action.deltaMs;
+
+        switch (next.disco.state) {
+          case DiscoState.DROPPING_BALL: {
+            // Move all characters toward dance spots
+            const spots = POSITIONS.DISCO_SPOTS;
+            const officerNames = [...next.officers.keys()];
+            for (let i = 0; i < officerNames.length; i++) {
+              const officer = next.officers.get(officerNames[i])!;
+              const spot = spots[i % spots.length];
+              officer.render.targetPosition = spot;
+              const dir = directionTo(officer.render.position, spot);
+              officer.render.direction = dir;
+              moveToward(officer.render.position, spot, GRID.WALK_SPEED, action.deltaMs / 1000);
+              officer.render.animFrame = (officer.render.animFrame + (action.deltaMs > 100 ? 1 : 0)) % 3;
+            }
+            // Calvin walks to dance spot
+            if (next.calvin.state === CalvinState.SEATED || next.calvin.state === CalvinState.LISTENING) {
+              const calvinSpot = spots[4] ?? spots[0];
+              const dir = directionTo(next.calvin.render.position, calvinSpot);
+              next.calvin.render.direction = dir;
+              moveToward(next.calvin.render.position, calvinSpot, GRID.WALK_SPEED, action.deltaMs / 1000);
+              next.calvin.render.animFrame = (next.calvin.render.animFrame + (action.deltaMs > 100 ? 1 : 0)) % 3;
+            }
+
+            if (next.disco.timer <= 0) {
+              // Transition to dancing
+              next.disco.state = DiscoState.DANCING;
+              next.disco.timer = TIMING.DISCO_DANCE_DURATION;
+              // Set all officers to DANCING
+              for (const [, officer] of next.officers) {
+                officer.state = OfficerState.DANCING;
+                officer.danceTimer = 0;
+                officer.render.animFrame = 0;
+              }
+              addLogEntry(next, "All hands: DANCE!");
+            }
+            break;
+          }
+
+          case DiscoState.DANCING: {
+            // Cycle dance frames for all officers
+            for (const [, officer] of next.officers) {
+              officer.danceTimer += action.deltaMs;
+              if (officer.danceTimer >= TIMING.DANCE_FRAME_INTERVAL) {
+                officer.danceTimer -= TIMING.DANCE_FRAME_INTERVAL;
+                officer.render.animFrame = (officer.render.animFrame + 1) % 4;
+              }
+            }
+            // Calvin dance animation
+            next.calvin.timer = (next.calvin.timer ?? 0) + action.deltaMs;
+            if (next.calvin.timer >= TIMING.DANCE_FRAME_INTERVAL) {
+              next.calvin.timer -= TIMING.DANCE_FRAME_INTERVAL;
+              next.calvin.render.animFrame = (next.calvin.render.animFrame + 1) % 4;
+            }
+
+            // Disco speech bubbles
+            next.disco.bubbleTimer -= action.deltaMs;
+            if (next.disco.bubbleTimer <= 0) {
+              next.disco.bubbleTimer = TIMING.DISCO_BUBBLE_INTERVAL;
+              // Pick a random character and give them a line
+              const allChars = [
+                ...next.officers.values(),
+              ];
+              const randomChar = allChars[Math.floor(Math.random() * allChars.length)];
+              if (randomChar) {
+                const line = DISCO_LINES[Math.floor(Math.random() * DISCO_LINES.length)];
+                randomChar.render.speechBubble = line;
+                randomChar.render.speechBubbleTimer = TIMING.SPEECH_BUBBLE_DURATION;
+              }
+            }
+
+            if (next.disco.timer <= 0) {
+              next.disco.state = DiscoState.RAISING_BALL;
+              next.disco.timer = TIMING.DISCO_BALL_RAISE_DURATION;
+            }
+            break;
+          }
+
+          case DiscoState.RAISING_BALL: {
+            if (next.disco.timer <= 0) {
+              // Restore all character states
+              const saved = next.disco.savedStates;
+              if (saved) {
+                for (const [name, officer] of next.officers) {
+                  const s = saved.get(name);
+                  if (s) {
+                    officer.render.position = { ...s.position };
+                    officer.state = s.state as OfficerState;
+                    officer.danceTimer = 0;
+                    officer.render.animFrame = 0;
+                    officer.render.speechBubble = null;
+                    officer.render.speechBubbleTimer = 0;
+                  }
+                }
+                const calvinSaved = saved.get("calvin");
+                if (calvinSaved) {
+                  next.calvin.render.position = { ...calvinSaved.position };
+                  next.calvin.state = calvinSaved.state as CalvinState;
+                  next.calvin.render.animFrame = 0;
+                }
+              }
+
+              // Dorte leaves
+              next.idleBehavior.dorte.state = DorteState.LEAVING;
+              next.idleBehavior.dorte.render.speechBubble = null;
+              next.idleBehavior.dorte.render.speechBubbleTimer = 0;
+
+              // Reset disco state
+              next.disco = {
+                state: DiscoState.INACTIVE,
+                timer: 0,
+                song: null,
+                bubbleTimer: 0,
+                savedStates: null,
+              };
+
+              addLogEntry(next, "Disco protocol complete. Resuming normal operations.");
+            }
+            break;
+          }
+        }
+      }
       break;
     }
 
@@ -462,6 +613,61 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
         timestamp: Date.now(),
       };
       return bridgeReducer(next, { type: "TRACK_EVENT", payload: debugStop });
+    }
+
+    case "DISCO_EVENT": {
+      if (action.payload.action === "start" && next.disco.state === DiscoState.INACTIVE) {
+        // Save current states for all characters
+        const saved = new Map<string, { position: { x: number; y: number }; state: string }>();
+        for (const [name, officer] of next.officers) {
+          saved.set(name, {
+            position: { ...officer.render.position },
+            state: officer.state,
+          });
+        }
+        saved.set("calvin", {
+          position: { ...next.calvin.render.position },
+          state: next.calvin.state,
+        });
+
+        next.disco = {
+          state: DiscoState.DROPPING_BALL,
+          timer: TIMING.DISCO_BALL_DROP_DURATION,
+          song: action.payload.artist && action.payload.title
+            ? { artist: action.payload.artist, title: action.payload.title }
+            : next.currentTrack,
+          bubbleTimer: TIMING.DISCO_BUBBLE_INTERVAL,
+          savedStates: saved,
+        };
+
+        // Make Dorte visible and walk to dance position
+        next.idleBehavior.dorte.render.visible = true;
+        next.idleBehavior.dorte.render.position = { ...POSITIONS.ENTRANCE };
+        next.idleBehavior.dorte.state = DorteState.ENTERING;
+
+        addLogEntry(next, "ALERT: Chart-topping hit detected! Initiating disco protocol!");
+      } else if (action.payload.action === "stop" && next.disco.state !== DiscoState.INACTIVE) {
+        // Force to raising ball phase
+        if (next.disco.state === DiscoState.DANCING) {
+          next.disco.state = DiscoState.RAISING_BALL;
+          next.disco.timer = TIMING.DISCO_BALL_RAISE_DURATION;
+        }
+      }
+      break;
+    }
+
+    case "DEBUG_DISCO": {
+      if (next.disco.state === DiscoState.INACTIVE) {
+        const fakeEvent: DiscoEventMessage = {
+          type: "disco_event",
+          action: "start",
+          artist: "Bee Gees",
+          title: "Stayin' Alive",
+          timestamp: Date.now(),
+        };
+        return bridgeReducer(next, { type: "DISCO_EVENT", payload: fakeEvent });
+      }
+      break;
     }
   }
 

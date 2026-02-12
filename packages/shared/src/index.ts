@@ -20,6 +20,7 @@ export {
   CalvinState,
   DorteState,
   CameoState,
+  DiscoState,
   BridgeAtmosphere,
 } from "./types.js";
 
@@ -36,6 +37,7 @@ export type {
   StatusMessage,
   BridgePingMessage,
   BridgePongMessage,
+  DiscoEventMessage,
   IngestMessage,
   BridgeMessage,
   WireMessage,
@@ -47,6 +49,7 @@ export {
   isDisconnect,
   isSystemIdle,
   isTrackEvent,
+  isDiscoEvent,
   isStatusMessage,
   isBridgePing,
   isBridgePong,
@@ -65,4 +68,4 @@ export { TIMING, GRID, POSITIONS, RECONNECT, VIEWSCREEN, CAPTAIN_PING } from "./
 export { calculateStardate } from "./stardate.js";
 
 // Content
-export { PUNS, GOSSIPS, SCOLDINGS, CAMEOS, getRandomReport } from "./content/index.js";
+export { PUNS, GOSSIPS, SCOLDINGS, CAMEOS, DISCO_LINES, getRandomReport } from "./content/index.js";

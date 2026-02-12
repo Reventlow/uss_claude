@@ -42,6 +42,18 @@ export const TIMING = {
   CAMEO_DORTE_SPEAK_DURATION: 5_000,
   /** How long the cameo character repeats their corrected line (ms) */
   CAMEO_REPEAT_DURATION: 4_000,
+  /** Disco ball descent duration (ms) */
+  DISCO_BALL_DROP_DURATION: 2_000,
+  /** Disco main dance phase duration (ms) */
+  DISCO_DANCE_DURATION: 25_000,
+  /** Disco ball ascent duration (ms) */
+  DISCO_BALL_RAISE_DURATION: 3_000,
+  /** Total disco event duration (ms) */
+  DISCO_TOTAL_DURATION: 30_000,
+  /** Time between disco speech bubbles (ms) */
+  DISCO_BUBBLE_INTERVAL: 5_000,
+  /** Trending chart refresh interval (ms) — 1 hour */
+  DISCO_CHART_REFRESH: 3_600_000,
 } as const;
 
 // --- Grid constants ---
@@ -95,6 +107,16 @@ export const POSITIONS = {
   // Wander bounds
   WANDER_MIN: { x: 40, y: 60 } as Point,
   WANDER_MAX: { x: 200, y: 170 } as Point,
+
+  // Disco dance floor positions (center of bridge)
+  DISCO_SPOTS: [
+    { x: 100, y: 135 },  // Dance spot 1 (Glass)
+    { x: 115, y: 140 },  // Dance spot 2 (Fizban)
+    { x: 130, y: 135 },  // Dance spot 3 (Jasper)
+    { x: 140, y: 140 },  // Dance spot 4 (Spoty)
+    { x: 110, y: 150 },  // Dance spot 5 (Calvin)
+    { x: 95, y: 145 },   // Dance spot 6 (Dorte)
+  ] as Point[],
 } as const;
 
 // --- Captain ping parameters ---
