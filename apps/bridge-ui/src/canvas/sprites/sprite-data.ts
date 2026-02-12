@@ -19,6 +19,7 @@ export interface CharacterSprites {
   walk: SpriteSet;
   seated?: SpriteFrame; // Only Calvin has a seated variant
   dance?: SpriteFrame[]; // Dance animation frames (Spoty)
+  sleep?: SpriteFrame[]; // Sleep animation frames (nodding off cycle)
 }
 
 const _ = null; // Shorthand for transparent
@@ -817,6 +818,47 @@ function makeDorteDance(frame: number): SpriteFrame {
   ];
 }
 
+/**
+ * Sleep frames — 2-frame nodding-off cycle (facing down, eyes closed).
+ * Frame 0: standing with closed eyes
+ * Frame 1: head drooped down 1 pixel (nodding off)
+ */
+function makeSleepFrames(U: string, UD: string): SpriteFrame[] {
+  // Frame 0: standing, eyes closed (S replaces D for eyes)
+  const frame0: SpriteFrame = [
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, S, S, S, S, S, S, _],
+    [_, S, S, S, S, S, S, _], // eyes closed
+    [_, _, S, S, S, S, _, _],
+    [_, U, U, U, U, U, U, _],
+    [_, U, U, U, U, U, U, _],
+    [_, UD, U, U, U, U, UD, _],
+    [_, _, UD, U, U, UD, _, _],
+    [_, _, UD, _, _, UD, _, _],
+    [_, _, UD, _, _, UD, _, _],
+    [_, _, UD, _, _, UD, _, _],
+  ];
+
+  // Frame 1: head drooped — head shifts down 1px, top row empty
+  const frame1: SpriteFrame = [
+    [_, _, _, _, _, _, _, _], // empty — head dropped
+    [_, _, H, H, H, H, _, _],
+    [_, H, H, H, H, H, H, _],
+    [_, S, S, S, S, S, S, _],
+    [_, S, S, S, S, S, S, _], // eyes closed
+    [_, _, S, S, S, S, _, _],
+    [_, U, U, U, U, U, U, _],
+    [_, U, U, U, U, U, U, _],
+    [_, UD, U, U, U, U, UD, _],
+    [_, _, UD, U, U, UD, _, _],
+    [_, _, UD, _, _, UD, _, _],
+    [_, _, UD, _, _, UD, _, _],
+  ];
+
+  return [frame0, frame1];
+}
+
 function buildSpriteSet(
   down: (f: number) => SpriteFrame,
   up: (f: number) => SpriteFrame,
@@ -836,14 +878,17 @@ export const SPRITES: Record<CharacterName, CharacterSprites> = {
   glass: {
     walk: buildSpriteSet(makeGlassDown, makeGlassUp, makeGlassLeft, makeGlassRight),
     dance: [makeGlassDance(0), makeGlassDance(1), makeGlassDance(2), makeGlassDance(3)],
+    sleep: makeSleepFrames(GU, GD),
   },
   fizban: {
     walk: buildSpriteSet(makeFizbanDown, makeFizbanUp, makeFizbanLeft, makeFizbanRight),
     dance: [makeFizbanDance(0), makeFizbanDance(1), makeFizbanDance(2), makeFizbanDance(3)],
+    sleep: makeSleepFrames(BU, BD),
   },
   jasper: {
     walk: buildSpriteSet(makeJasperDown, makeJasperUp, makeJasperLeft, makeJasperRight),
     dance: [makeJasperDance(0), makeJasperDance(1), makeJasperDance(2), makeJasperDance(3)],
+    sleep: makeSleepFrames(RU, RD),
   },
   spoty: {
     walk: buildSpriteSet(makeSpotyDown, makeSpotyUp, makeSpotyLeft, makeSpotyRight),
@@ -883,12 +928,16 @@ export function getSpriteFrame(
   frame: number,
   seated?: boolean,
   dancing?: boolean,
+  sleeping?: boolean,
 ): SpriteFrame {
   // Try main sprites first
   const mainSprites = SPRITES[name as CharacterName];
   if (mainSprites) {
     if (dancing && mainSprites.dance) {
       return mainSprites.dance[frame % mainSprites.dance.length];
+    }
+    if (sleeping && mainSprites.sleep) {
+      return mainSprites.sleep[frame % mainSprites.sleep.length];
     }
     if (seated && mainSprites.seated) {
       return mainSprites.seated;

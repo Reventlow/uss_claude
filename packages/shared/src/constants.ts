@@ -58,6 +58,8 @@ export const TIMING = {
   SLEEP_BUBBLE_INTERVAL: 8_000,
   /** Delay before an officer falls asleep after lofi detected (ms) */
   SLEEP_ONSET_DELAY: 5_000,
+  /** Sleep animation frame cycle interval (ms) — slow nod */
+  SLEEP_FRAME_INTERVAL: 1_500,
 } as const;
 
 // --- Grid constants ---

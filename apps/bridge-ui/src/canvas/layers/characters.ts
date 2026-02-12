@@ -18,10 +18,17 @@ const CHARACTER_INFO: Record<string, { label: string; color: string }> = {
 
 /** Set of officer names currently in DANCING state (set externally before draw) */
 let dancingOfficers: Set<string> = new Set();
+/** Set of officer names currently in SLEEPING state (set externally before draw) */
+let sleepingOfficers: Set<string> = new Set();
 
 /** Call before drawCharacters to inform which officers are dancing */
 export function setDancingOfficers(names: Set<string>): void {
   dancingOfficers = names;
+}
+
+/** Call before drawCharacters to inform which officers are sleeping */
+export function setSleepingOfficers(names: Set<string>): void {
+  sleepingOfficers = names;
 }
 
 /** Draw all visible characters, Y-sorted for depth */
@@ -39,6 +46,7 @@ export function drawCharacters(
       calvinState === CalvinState.SEATED || calvinState === CalvinState.LISTENING
     );
     const isDancing = dancingOfficers.has(char.name);
+    const isSleeping = sleepingOfficers.has(char.name);
 
     const frame = getSpriteFrame(
       char.name,
@@ -46,6 +54,7 @@ export function drawCharacters(
       char.animFrame,
       isSeated,
       isDancing,
+      isSleeping,
     );
 
     drawSprite(ctx, frame, char.position.x, char.position.y);

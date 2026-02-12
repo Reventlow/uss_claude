@@ -2,7 +2,7 @@ import { GRID, OfficerState, DiscoState, TIMING, type CharacterRenderState } fro
 import type { BridgeState } from "../state/bridge-state.js";
 import { drawBackground } from "./layers/background.js";
 import { drawViewscreen } from "./layers/viewscreen.js";
-import { drawCharacters, setDancingOfficers } from "./layers/characters.js";
+import { drawCharacters, setDancingOfficers, setSleepingOfficers } from "./layers/characters.js";
 import { drawSpeechBubbles } from "./layers/speech-bubbles.js";
 import { drawEffects } from "./layers/effects.js";
 import { drawSongTicker } from "./layers/song-ticker.js";
@@ -63,6 +63,15 @@ export function renderFrame(
     dancing.add("dorte");
   }
   setDancingOfficers(dancing);
+
+  // Inform character renderer which officers are sleeping
+  const sleeping = new Set<string>();
+  for (const [name, officer] of state.officers) {
+    if (officer.state === OfficerState.SLEEPING) {
+      sleeping.add(name);
+    }
+  }
+  setSleepingOfficers(sleeping);
 
   // Layer 3: Characters (Y-sorted)
   const characters = collectCharacters(state);

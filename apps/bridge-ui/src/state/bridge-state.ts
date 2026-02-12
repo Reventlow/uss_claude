@@ -433,9 +433,16 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
               }
             }
           } else {
-            // Someone is sleeping — show periodic sleep-talk bubbles
+            // Someone is sleeping — animate and show periodic sleep-talk bubbles
             const officer = next.officers.get(next.sleep.sleepingOfficer);
             if (officer && officer.state === OfficerState.SLEEPING) {
+              // Cycle sleep animation (nodding off): toggle frame 0/1
+              officer.danceTimer += action.deltaMs; // reuse danceTimer for sleep frame timing
+              if (officer.danceTimer >= TIMING.SLEEP_FRAME_INTERVAL) {
+                officer.danceTimer -= TIMING.SLEEP_FRAME_INTERVAL;
+                officer.render.animFrame = officer.render.animFrame === 0 ? 1 : 0;
+              }
+
               next.sleep.bubbleTimer -= action.deltaMs;
               if (next.sleep.bubbleTimer <= 0) {
                 next.sleep.bubbleTimer = TIMING.SLEEP_BUBBLE_INTERVAL;
