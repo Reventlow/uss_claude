@@ -2,7 +2,7 @@ import { WebSocket } from "ws";
 import type { IncomingMessage } from "node:http";
 import { parseMessage, isMcpEvent, isHeartbeat, isDisconnect, isSystemIdle, isTrackEvent, TIMING } from "@uss-claude/shared";
 import type { McpEventMessage, TrackEventMessage, DiscoEventMessage } from "@uss-claude/shared";
-import { isTrackTrending } from "./chart-fetcher.js";
+import { isTrackTrending, isTrackLofi } from "./chart-fetcher.js";
 import type { StateTracker } from "./state-tracker.js";
 import type { BridgeHandler } from "./bridge-handler.js";
 import { logger } from "./logger.js";
@@ -72,11 +72,12 @@ export class IngestHandler {
         this.bridgeHandler.broadcast(msg as McpEventMessage);
       } else if (isTrackEvent(msg)) {
         const trackMsg = msg as TrackEventMessage;
-        // Forward track events to bridge clients (don't affect Claude active/idle state)
+        // Forward track events to bridge clients immediately
         this.bridgeHandler.broadcast(trackMsg);
-        // Check for disco trigger
+        // Check for disco trigger and lofi tags
         if ((trackMsg.action === "playing" || trackMsg.action === "changed") && trackMsg.artist && trackMsg.title) {
           void this.checkDiscoTrigger(trackMsg.artist, trackMsg.title);
+          void this.checkLofiTags(trackMsg);
         }
       } else if (isHeartbeat(msg)) {
         this.stateTracker.onHeartbeat();
@@ -141,6 +142,17 @@ export class IngestHandler {
       this.discoTimer = null;
       logger.info("disco", "Disco protocol complete. Resuming normal operations.");
     }, TIMING.DISCO_TOTAL_DURATION);
+  }
+
+  /** Check Last.fm tags and re-broadcast with lofi flag if applicable */
+  private async checkLofiTags(trackMsg: TrackEventMessage): Promise<void> {
+    if (!trackMsg.artist || !trackMsg.title) return;
+    const lofi = await isTrackLofi(trackMsg.artist, trackMsg.title);
+    if (lofi) {
+      // Re-broadcast with lofi flag so the UI knows
+      const enriched: TrackEventMessage = { ...trackMsg, lofi: true };
+      this.bridgeHandler.broadcast(enriched);
+    }
   }
 
   /** Whether the main ingest client (hook-cli) is currently connected */

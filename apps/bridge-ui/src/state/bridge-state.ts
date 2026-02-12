@@ -66,7 +66,7 @@ export interface BridgeState {
   /** Whether we're waiting for a pong (ping sent but no pong yet) */
   awaitingPong: boolean;
   /** Currently playing Spotify track (null if nothing playing) */
-  currentTrack: { artist: string; title: string } | null;
+  currentTrack: { artist: string; title: string; lofi?: boolean } | null;
   /** Disco mode state */
   disco: {
     state: DiscoState;
@@ -521,26 +521,27 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
 
           case DiscoState.RAISING_BALL: {
             if (next.disco.timer <= 0) {
-              // Restore all character states
-              const saved = next.disco.savedStates;
-              if (saved) {
-                for (const [name, officer] of next.officers) {
-                  const s = saved.get(name);
-                  if (s) {
-                    officer.render.position = { ...s.position };
-                    officer.state = s.state as OfficerState;
-                    officer.danceTimer = 0;
-                    officer.render.animFrame = 0;
-                    officer.render.speechBubble = null;
-                    officer.render.speechBubbleTimer = 0;
-                  }
+              // Officers walk back to their idle positions (don't teleport)
+              for (const [name, officer] of next.officers) {
+                officer.danceTimer = 0;
+                officer.render.animFrame = 0;
+                officer.render.speechBubble = null;
+                officer.render.speechBubbleTimer = 0;
+                // If Spoty was dancing at station and music is still playing, go back to station
+                if (name === "spoty" && next.currentTrack !== null) {
+                  officer.state = OfficerState.WALKING_TO_STATION;
+                  officer.stuckTimer = 0;
+                } else {
+                  officer.state = OfficerState.WALKING_TO_IDLE;
                 }
-                const calvinSaved = saved.get("calvin");
-                if (calvinSaved) {
-                  next.calvin.render.position = { ...calvinSaved.position };
-                  next.calvin.state = calvinSaved.state as CalvinState;
-                  next.calvin.render.animFrame = 0;
-                }
+              }
+
+              // Calvin walks back to chair
+              const calvinSaved = next.disco.savedStates?.get("calvin");
+              if (calvinSaved && calvinSaved.state !== CalvinState.OFF_BRIDGE) {
+                calvinEnter(next.calvin);
+              } else {
+                next.calvin.render.animFrame = 0;
               }
 
               // Dorte leaves
@@ -618,9 +619,12 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
       if (!spotyFsm) break;
 
       if (action.payload.action === "playing" || action.payload.action === "changed") {
+        // Preserve existing lofi flag if this is an update without it
+        const prevLofi = next.currentTrack?.lofi;
         next.currentTrack = {
           artist: action.payload.artist ?? "Unknown",
           title: action.payload.title ?? "Unknown",
+          lofi: action.payload.lofi ?? prevLofi,
         };
         // Spoty walks to station if not already there/dancing
         if (

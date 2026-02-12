@@ -40,6 +40,8 @@ export interface TrackEventMessage {
   action: TrackAction;
   artist?: string;
   title?: string;
+  /** True if Last.fm tags indicate this is a lofi/chill track */
+  lofi?: boolean;
   timestamp: number;
 }
 
