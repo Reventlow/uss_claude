@@ -104,6 +104,17 @@ export function DebugPanel({ dispatch }: DebugPanelProps) {
               onClick={() => dispatch({ type: "DEBUG_TRACK_STOP" })}
             />
           </div>
+
+          {/* Separator */}
+          <div style={{ borderTop: "1px solid #333", margin: "2px 0" }} />
+
+          {/* Disco controls */}
+          <div style={{ display: "flex", gap: 4 }}>
+            <DebugButton
+              label="DISCO!"
+              onClick={() => dispatch({ type: "DEBUG_DISCO" })}
+            />
+          </div>
         </div>
       )}
     </div>

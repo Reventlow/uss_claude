@@ -11,6 +11,8 @@ export interface ServerConfig {
   bridgePassword: string | null;
   /** Directory to serve static files from (built UI) */
   staticDir: string;
+  /** Last.fm API key for chart matching (optional, enables disco from chart hits) */
+  lastfmApiKey: string | null;
 }
 
 export function loadConfig(): ServerConfig {
@@ -20,5 +22,6 @@ export function loadConfig(): ServerConfig {
     bridgeToken: process.env.BRIDGE_TOKEN ?? "",
     bridgePassword: process.env.BRIDGE_PASSWORD ?? null,
     staticDir: process.env.STATIC_DIR ?? "../bridge-ui/dist",
+    lastfmApiKey: process.env.LASTFM_API_KEY ?? null,
   };
 }

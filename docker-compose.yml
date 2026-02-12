@@ -10,6 +10,7 @@ services:
       - BRIDGE_TOKEN=${BRIDGE_TOKEN}
       - BRIDGE_PASSWORD=${BRIDGE_PASSWORD:-}
       - STATIC_DIR=/app/static
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3420/"]
       interval: 30s
