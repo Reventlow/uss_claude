@@ -100,15 +100,24 @@ async function ensureFresh(): Promise<void> {
 const LOFI_TAGS = new Set([
   "lofi", "lo-fi", "lo fi", "chillhop", "lofi hip hop", "lofi beats",
   "chillwave", "lofi chill", "study beats", "study music", "chill beats",
+  "chill", "chillout", "chill out",
 ]);
 
-/** Check Last.fm tags to determine if a track is lofi */
-export async function isTrackLofi(artist: string, title: string): Promise<boolean> {
-  const apiKey = process.env.LASTFM_API_KEY;
-  if (!apiKey) return false;
+/** Keywords in artist/track names that indicate lofi */
+const LOFI_NAME_KEYWORDS = [
+  "lofi", "lo-fi", "lo fi", "chillhop", "lofi girl", "chilled cow",
+  "study beats", "chill beats", "lofi hip hop",
+];
 
+/** Check if artist or track name contains lofi keywords */
+function nameHasLofiKeywords(artist: string, title: string): boolean {
+  const combined = `${artist} ${title}`.toLowerCase();
+  return LOFI_NAME_KEYWORDS.some((kw) => combined.includes(kw));
+}
+
+/** Fetch tags from a Last.fm endpoint and check for lofi matches */
+async function fetchTagsAndCheckLofi(url: string): Promise<boolean> {
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=track.gettoptags&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&api_key=${apiKey}&format=json`;
     const res = await fetch(url);
     if (!res.ok) return false;
 
@@ -119,21 +128,43 @@ export async function isTrackLofi(artist: string, title: string): Promise<boolea
     };
     if (!data.toptags?.tag || !Array.isArray(data.toptags.tag)) return false;
 
-    // Check if any high-count tag matches lofi indicators
-    const match = data.toptags.tag.some((t) => {
+    return data.toptags.tag.some((t) => {
       if (typeof t.name !== "string") return false;
-      const tagName = t.name.toLowerCase().trim();
-      return LOFI_TAGS.has(tagName);
+      return LOFI_TAGS.has(t.name.toLowerCase().trim());
     });
-
-    if (match) {
-      logger.info("chart", "Lofi track detected!", { artist, title });
-    }
-    return match;
-  } catch (err) {
-    logger.warn("chart", "Failed to fetch track tags", { error: String(err) });
+  } catch {
     return false;
   }
+}
+
+/** Check Last.fm tags (artist + track) and name keywords to determine if a track is lofi */
+export async function isTrackLofi(artist: string, title: string): Promise<boolean> {
+  // Quick check: does the name itself scream "lofi"?
+  if (nameHasLofiKeywords(artist, title)) {
+    logger.info("chart", "Lofi detected by name keywords!", { artist, title });
+    return true;
+  }
+
+  const apiKey = process.env.LASTFM_API_KEY;
+  if (!apiKey) return false;
+
+  // Check artist tags first (more reliable for lofi artists)
+  const artistUrl = `https://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=${encodeURIComponent(artist)}&api_key=${apiKey}&format=json`;
+  const artistMatch = await fetchTagsAndCheckLofi(artistUrl);
+  if (artistMatch) {
+    logger.info("chart", "Lofi detected by artist tags!", { artist, title });
+    return true;
+  }
+
+  // Fall back to track tags
+  const trackUrl = `https://ws.audioscrobbler.com/2.0/?method=track.gettoptags&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&api_key=${apiKey}&format=json`;
+  const trackMatch = await fetchTagsAndCheckLofi(trackUrl);
+  if (trackMatch) {
+    logger.info("chart", "Lofi detected by track tags!", { artist, title });
+    return true;
+  }
+
+  return false;
 }
 
 /** Check if a track is on the trending chart or in the allowlist */
