@@ -45,11 +45,11 @@ export const TIMING = {
   /** Disco ball descent duration (ms) */
   DISCO_BALL_DROP_DURATION: 2_000,
   /** Disco main dance phase duration (ms) */
-  DISCO_DANCE_DURATION: 25_000,
+  DISCO_DANCE_DURATION: 55_000,
   /** Disco ball ascent duration (ms) */
   DISCO_BALL_RAISE_DURATION: 3_000,
   /** Total disco event duration (ms) */
-  DISCO_TOTAL_DURATION: 30_000,
+  DISCO_TOTAL_DURATION: 60_000,
   /** Time between disco speech bubbles (ms) */
   DISCO_BUBBLE_INTERVAL: 5_000,
   /** Trending chart refresh interval (ms) — 1 hour */
