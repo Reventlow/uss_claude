@@ -10,6 +10,7 @@ import {
   type StatusMessage,
   type TrackEventMessage,
   type DiscoEventMessage,
+  type CharacterRenderState,
   POSITIONS,
   CAPTAIN_PING,
   TIMING,
@@ -316,72 +317,77 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
     }
 
     case "TICK": {
-      const captainPresent =
-        next.calvin.state === CalvinState.SEATED ||
-        next.calvin.state === CalvinState.LISTENING ||
-        next.calvin.state === CalvinState.ENTERING;
+      const discoActive = next.disco.state !== DiscoState.INACTIVE;
 
-      // Tick all officers
-      for (const [name, officer] of next.officers) {
-        const config = getOfficer(name);
-        const prevState = officer.state;
+      // During disco, skip normal officer/Calvin/idle ticks — disco tick handles everything
+      if (!discoActive) {
+        const captainPresent =
+          next.calvin.state === CalvinState.SEATED ||
+          next.calvin.state === CalvinState.LISTENING ||
+          next.calvin.state === CalvinState.ENTERING;
 
-        tickOfficer(
-          officer,
+        // Tick all officers
+        for (const [name, officer] of next.officers) {
+          const config = getOfficer(name);
+          const prevState = officer.state;
+
+          tickOfficer(
+            officer,
+            action.deltaMs,
+            captainPresent,
+            config.stationPosition,
+            config.idlePosition,
+          );
+
+          // Spoty override: transition to DANCING instead of WORKING when reaching station
+          if (name === "spoty" && prevState === OfficerState.WALKING_TO_STATION && officer.state === OfficerState.WORKING) {
+            officer.state = OfficerState.DANCING;
+            officer.danceTimer = 0;
+            officer.render.animFrame = 0;
+            officer.render.direction = "up";
+          }
+
+          // Spoty recovery: if idle but track is playing, re-dispatch to station
+          if (name === "spoty" && officer.state === OfficerState.IDLE && next.currentTrack !== null) {
+            officer.state = OfficerState.WALKING_TO_STATION;
+            officer.stuckTimer = 0;
+          }
+
+          // Auto-recover stuck officers (no "done" event received)
+          // Skip stuck timeout for DANCING officers (they stay until track stops)
+          if (
+            officer.state !== OfficerState.DANCING &&
+            officer.stuckTimer >= TIMING.STUCK_TIMEOUT &&
+            (officer.state === OfficerState.WALKING_TO_STATION ||
+             officer.state === OfficerState.WORKING)
+          ) {
+            officer.stuckTimer = 0;
+            officer.pendingDone = false;
+            officer.state = OfficerState.WALKING_TO_IDLE;
+            addLogEntry(next, `${config.displayName} returning to post — no response received.`);
+          }
+
+          // If officer just finished reporting, Calvin listens
+          if (
+            officer.state === OfficerState.REPORTING &&
+            officer.timer === 0
+          ) {
+            calvinListen(next.calvin);
+          }
+        }
+
+        // Tick Calvin
+        tickCalvin(next.calvin, action.deltaMs);
+
+        // Tick idle behavior
+        const idleResult = tickIdleBehavior(
+          next.idleBehavior,
+          next.officers,
           action.deltaMs,
-          captainPresent,
-          config.stationPosition,
-          config.idlePosition,
         );
-
-        // Spoty override: transition to DANCING instead of WORKING when reaching station
-        if (name === "spoty" && prevState === OfficerState.WALKING_TO_STATION && officer.state === OfficerState.WORKING) {
-          officer.state = OfficerState.DANCING;
-          officer.danceTimer = 0;
-          officer.render.animFrame = 0;
-          officer.render.direction = "up";
+        for (const msg of idleResult.logMessages) {
+          addLogEntry(next, msg);
         }
-
-        // Spoty recovery: if idle but track is playing, re-dispatch to station
-        if (name === "spoty" && officer.state === OfficerState.IDLE && next.currentTrack !== null) {
-          officer.state = OfficerState.WALKING_TO_STATION;
-          officer.stuckTimer = 0;
-        }
-
-        // Auto-recover stuck officers (no "done" event received)
-        // Skip stuck timeout for DANCING officers (they stay until track stops)
-        if (
-          officer.state !== OfficerState.DANCING &&
-          officer.stuckTimer >= TIMING.STUCK_TIMEOUT &&
-          (officer.state === OfficerState.WALKING_TO_STATION ||
-           officer.state === OfficerState.WORKING)
-        ) {
-          officer.stuckTimer = 0;
-          officer.pendingDone = false;
-          officer.state = OfficerState.WALKING_TO_IDLE;
-          addLogEntry(next, `${config.displayName} returning to post — no response received.`);
-        }
-
-        // If officer just finished reporting, Calvin listens
-        if (
-          officer.state === OfficerState.REPORTING &&
-          officer.timer === 0
-        ) {
-          calvinListen(next.calvin);
-        }
-      }
-
-      // Tick Calvin
-      tickCalvin(next.calvin, action.deltaMs);
-
-      // Tick idle behavior
-      const idleResult = tickIdleBehavior(
-        next.idleBehavior,
-        next.officers,
-        action.deltaMs,
-      );
-      for (const msg of idleResult.logMessages) {
-        addLogEntry(next, msg);
       }
 
       // Tick disco mode
@@ -403,12 +409,23 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
               officer.render.animFrame = (officer.render.animFrame + (action.deltaMs > 100 ? 1 : 0)) % 3;
             }
             // Calvin walks to dance spot
-            if (next.calvin.state === CalvinState.SEATED || next.calvin.state === CalvinState.LISTENING) {
+            {
               const calvinSpot = spots[4] ?? spots[0];
               const dir = directionTo(next.calvin.render.position, calvinSpot);
               next.calvin.render.direction = dir;
               moveToward(next.calvin.render.position, calvinSpot, GRID.WALK_SPEED, action.deltaMs / 1000);
               next.calvin.render.animFrame = (next.calvin.render.animFrame + (action.deltaMs > 100 ? 1 : 0)) % 3;
+            }
+
+            // Dorte walks to dance spot
+            {
+              const dorte = next.idleBehavior.dorte;
+              const dorteSpot = spots[5] ?? spots[0];
+              dorte.render.visible = true;
+              const dir = directionTo(dorte.render.position, dorteSpot);
+              dorte.render.direction = dir;
+              moveToward(dorte.render.position, dorteSpot, GRID.WALK_SPEED, action.deltaMs / 1000);
+              dorte.render.animFrame = (dorte.render.animFrame + (action.deltaMs > 100 ? 1 : 0)) % 3;
             }
 
             if (next.disco.timer <= 0) {
@@ -442,19 +459,31 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
               next.calvin.render.animFrame = (next.calvin.render.animFrame + 1) % 4;
             }
 
+            // Dorte dance animation
+            {
+              const dorte = next.idleBehavior.dorte;
+              dorte.timer = (dorte.timer ?? 0) + action.deltaMs;
+              if (dorte.timer >= TIMING.DANCE_FRAME_INTERVAL) {
+                dorte.timer -= TIMING.DANCE_FRAME_INTERVAL;
+                dorte.render.animFrame = (dorte.render.animFrame + 1) % 4;
+              }
+            }
+
             // Disco speech bubbles
             next.disco.bubbleTimer -= action.deltaMs;
             if (next.disco.bubbleTimer <= 0) {
               next.disco.bubbleTimer = TIMING.DISCO_BUBBLE_INTERVAL;
-              // Pick a random character and give them a line
-              const allChars = [
-                ...next.officers.values(),
+              // Pick a random character (officers, Calvin, or Dorte)
+              const allRenders: CharacterRenderState[] = [
+                ...[...next.officers.values()].map((o) => o.render),
+                next.calvin.render,
+                next.idleBehavior.dorte.render,
               ];
-              const randomChar = allChars[Math.floor(Math.random() * allChars.length)];
-              if (randomChar) {
+              const randomRender = allRenders[Math.floor(Math.random() * allRenders.length)];
+              if (randomRender) {
                 const line = DISCO_LINES[Math.floor(Math.random() * DISCO_LINES.length)];
-                randomChar.render.speechBubble = line;
-                randomChar.render.speechBubbleTimer = TIMING.SPEECH_BUBBLE_DURATION;
+                randomRender.speechBubble = line;
+                randomRender.speechBubbleTimer = TIMING.SPEECH_BUBBLE_DURATION;
               }
             }
 

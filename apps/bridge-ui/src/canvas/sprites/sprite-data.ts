@@ -887,11 +887,11 @@ export function getSpriteFrame(
   // Try main sprites first
   const mainSprites = SPRITES[name as CharacterName];
   if (mainSprites) {
-    if (seated && mainSprites.seated) {
-      return mainSprites.seated;
-    }
     if (dancing && mainSprites.dance) {
       return mainSprites.dance[frame % mainSprites.dance.length];
+    }
+    if (seated && mainSprites.seated) {
+      return mainSprites.seated;
     }
     return mainSprites.walk[direction][frame % 3];
   }
