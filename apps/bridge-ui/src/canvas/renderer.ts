@@ -83,7 +83,7 @@ export function renderFrame(
   }
 
   // Layer 4: Speech bubbles
-  drawSpeechBubbles(ctx, characters, discoState === DiscoState.DANCING);
+  drawSpeechBubbles(ctx, characters);
 
   // Layer 5: Song ticker / disco title
   if (isDiscoDancing) {

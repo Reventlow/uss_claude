@@ -394,6 +394,31 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
       if (next.disco.state !== DiscoState.INACTIVE) {
         next.disco.timer -= action.deltaMs;
 
+        // Tick speech bubble timers (normally handled by tickOfficer/tickCalvin/tickDorte)
+        for (const [, officer] of next.officers) {
+          if (officer.render.speechBubbleTimer > 0) {
+            officer.render.speechBubbleTimer -= action.deltaMs;
+            if (officer.render.speechBubbleTimer <= 0) {
+              officer.render.speechBubble = null;
+              officer.render.speechBubbleTimer = 0;
+            }
+          }
+        }
+        if (next.calvin.render.speechBubbleTimer > 0) {
+          next.calvin.render.speechBubbleTimer -= action.deltaMs;
+          if (next.calvin.render.speechBubbleTimer <= 0) {
+            next.calvin.render.speechBubble = null;
+            next.calvin.render.speechBubbleTimer = 0;
+          }
+        }
+        if (next.idleBehavior.dorte.render.speechBubbleTimer > 0) {
+          next.idleBehavior.dorte.render.speechBubbleTimer -= action.deltaMs;
+          if (next.idleBehavior.dorte.render.speechBubbleTimer <= 0) {
+            next.idleBehavior.dorte.render.speechBubble = null;
+            next.idleBehavior.dorte.render.speechBubbleTimer = 0;
+          }
+        }
+
         switch (next.disco.state) {
           case DiscoState.DROPPING_BALL: {
             // Move all characters toward dance spots

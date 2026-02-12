@@ -7,11 +7,10 @@ const PS = GRID.PIXEL_SIZE;
 export function drawSpeechBubbles(
   ctx: CanvasRenderingContext2D,
   characters: CharacterRenderState[],
-  discoMode?: boolean,
 ): void {
   for (const char of characters) {
     if (!char.visible || !char.speechBubble) continue;
-    drawBubble(ctx, char.speechBubble, char.position.x, char.position.y, discoMode);
+    drawBubble(ctx, char.speechBubble, char.position.x, char.position.y);
   }
 }
 
@@ -21,13 +20,10 @@ function drawBubble(
   text: string,
   gridX: number,
   gridY: number,
-  discoMode?: boolean,
 ): void {
   ctx.save();
-  const fontSize = discoMode ? PS * 5.5 : PS * 2.5;
-  ctx.font = discoMode
-    ? `${fontSize}px "Dekko", cursive`
-    : `${fontSize}px "Press Start 2P", monospace`;
+  const fontSize = PS * 5.5;
+  ctx.font = `${fontSize}px "Dekko", cursive`;
 
   // Measure text and wrap if needed
   const maxWidth = 150 * PS;
@@ -47,7 +43,7 @@ function drawBubble(
   }
   if (currentLine) lines.push(currentLine);
 
-  const lineHeight = discoMode ? PS * 6 : PS * 4;
+  const lineHeight = PS * 6;
   const padding = PS * 2;
   let bubbleWidth = 0;
   for (const line of lines) {
