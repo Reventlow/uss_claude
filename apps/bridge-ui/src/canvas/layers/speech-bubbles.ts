@@ -24,9 +24,10 @@ function drawBubble(
   discoMode?: boolean,
 ): void {
   ctx.save();
+  const fontSize = discoMode ? PS * 5.5 : PS * 2.5;
   ctx.font = discoMode
-    ? `${PS * 3.5}px "Dekko", cursive`
-    : `${PS * 2.5}px "Press Start 2P", monospace`;
+    ? `${fontSize}px "Dekko", cursive`
+    : `${fontSize}px "Press Start 2P", monospace`;
 
   // Measure text and wrap if needed
   const maxWidth = 150 * PS;
@@ -46,7 +47,7 @@ function drawBubble(
   }
   if (currentLine) lines.push(currentLine);
 
-  const lineHeight = PS * 4;
+  const lineHeight = discoMode ? PS * 6 : PS * 4;
   const padding = PS * 2;
   let bubbleWidth = 0;
   for (const line of lines) {

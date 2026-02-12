@@ -18,7 +18,7 @@ export function drawDiscoTitle(
   ctx.save();
 
   const text = `NOW PLAYING: ${song.artist} - ${song.title}`;
-  const fontSize = PS * 3;
+  const fontSize = PS * 5;
   ctx.font = `${fontSize}px "Dekko", cursive`;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
