@@ -2,10 +2,11 @@ import { GRID, POSITIONS } from "@uss-claude/shared";
 import { COLORS } from "../sprites/colors.js";
 
 const PS = GRID.PIXEL_SIZE;
+const CANVAS_W = GRID.WIDTH * PS;
 
 /**
  * Draw a comic-style thought bubble next to the comms console
- * showing the currently playing track.
+ * showing the currently playing track. Expands to the right as needed.
  */
 export function drawSongTicker(
   ctx: CanvasRenderingContext2D,
@@ -15,26 +16,21 @@ export function drawSongTicker(
 
   ctx.save();
 
-  // Bubble position — to the right of the comms console
   const stationX = POSITIONS.SPOTY_STATION.x * PS;
   const stationY = POSITIONS.SPOTY_STATION.y * PS;
-  const bubbleX = stationX + 30 * PS;
-  const bubbleY = stationY - 12 * PS;
 
-  // Measure text to size the bubble
+  // Bubble left edge anchored to the right of the thought circles
+  const bubbleLeft = stationX + 28 * PS;
+  const bubbleCenterY = stationY - 12 * PS;
+
+  // Measure text to size the bubble dynamically
   const fontSize = PS * 2.5;
   ctx.font = `${fontSize}px "Press Start 2P", monospace`;
-  const noteText = "\u266A";
-  const artistText = currentTrack.artist;
-  const titleText = currentTrack.title;
 
-  // Truncate long text
-  const maxChars = 18;
-  const truncArtist = artistText.length > maxChars ? artistText.slice(0, maxChars - 1) + "\u2026" : artistText;
-  const truncTitle = titleText.length > maxChars ? titleText.slice(0, maxChars - 1) + "\u2026" : titleText;
+  const line1 = `\u266A ${currentTrack.artist}`;
+  const line2 = currentTrack.title;
 
-  const line1 = `${noteText} ${truncArtist}`;
-  const line2 = truncTitle;
+  // Measure actual pixel widths
   const line1Width = ctx.measureText(line1).width;
   const line2Width = ctx.measureText(line2).width;
   const textWidth = Math.max(line1Width, line2Width);
@@ -42,9 +38,17 @@ export function drawSongTicker(
   const padX = 6;
   const padY = 5;
   const lineHeight = fontSize + 2;
-  const bubbleW = textWidth + padX * 2;
-  const bubbleH = lineHeight * 2 + padY * 2;
   const radius = 6;
+
+  // Size bubble to fit text, but clamp to canvas right edge
+  const maxBubbleW = CANVAS_W - bubbleLeft - 4;
+  const bubbleW = Math.min(textWidth + padX * 2, maxBubbleW);
+  const bubbleH = lineHeight * 2 + padY * 2;
+
+  // If text is wider than bubble, truncate with ellipsis
+  const availTextW = bubbleW - padX * 2;
+  const drawLine1 = truncateToFit(ctx, line1, availTextW);
+  const drawLine2 = truncateToFit(ctx, line2, availTextW);
 
   // Trailing thought circles (from console toward bubble)
   const circles = [
@@ -63,9 +67,9 @@ export function drawSongTicker(
     ctx.stroke();
   }
 
-  // Bubble body — rounded rectangle
-  const bx = bubbleX - bubbleW / 2;
-  const by = bubbleY - bubbleH / 2;
+  // Bubble body — rounded rectangle, left-anchored
+  const bx = bubbleLeft;
+  const by = bubbleCenterY - bubbleH / 2;
 
   ctx.beginPath();
   ctx.moveTo(bx + radius, by);
@@ -85,16 +89,34 @@ export function drawSongTicker(
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Text
+  // Text — left-aligned inside bubble
   ctx.fillStyle = COLORS.spotifyGreen;
   ctx.font = `${fontSize}px "Press Start 2P", monospace`;
-  ctx.textAlign = "center";
+  ctx.textAlign = "left";
   ctx.textBaseline = "middle";
 
-  const textCenterX = bubbleX;
-  const textTopY = bubbleY - lineHeight / 2;
-  ctx.fillText(line1, textCenterX, textTopY);
-  ctx.fillText(line2, textCenterX, textTopY + lineHeight);
+  const textLeft = bx + padX;
+  const textTopY = bubbleCenterY - lineHeight / 2;
+  ctx.fillText(drawLine1, textLeft, textTopY);
+  ctx.fillText(drawLine2, textLeft, textTopY + lineHeight);
 
   ctx.restore();
+}
+
+/** Truncate text with ellipsis if it exceeds available pixel width */
+function truncateToFit(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+
+  const ellipsis = "\u2026";
+  for (let i = text.length - 1; i > 0; i--) {
+    const truncated = text.slice(0, i) + ellipsis;
+    if (ctx.measureText(truncated).width <= maxWidth) {
+      return truncated;
+    }
+  }
+  return ellipsis;
 }
