@@ -83,14 +83,14 @@ export const POSITIONS = {
   FIZBAN_IDLE: { x: 185, y: 85 } as Point,
   JASPER_IDLE: { x: 125, y: 115 } as Point,
 
-  // Report positions (in front of captain)
-  REPORT_SPOT: { x: 120, y: 138 } as Point,
+  // Report positions (in front of captain, offset left to avoid overlap)
+  REPORT_SPOT: { x: 100, y: 138 } as Point,
 
-  // Dorte scolding position
-  DORTE_SCOLD: { x: 120, y: 125 } as Point,
+  // Dorte scolding position (offset left of captain)
+  DORTE_SCOLD: { x: 95, y: 125 } as Point,
 
-  // Cameo stop position (between captain and railing)
-  CAMEO_STOP: { x: 120, y: 140 } as Point,
+  // Cameo stop position (offset left of captain)
+  CAMEO_STOP: { x: 100, y: 140 } as Point,
 
   // Wander bounds
   WANDER_MIN: { x: 40, y: 60 } as Point,
