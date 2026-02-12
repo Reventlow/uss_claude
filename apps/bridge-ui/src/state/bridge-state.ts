@@ -16,6 +16,7 @@ import {
   TIMING,
   GRID,
   DISCO_LINES,
+  SLEEP_TALK,
   getOfficerNames,
   getOfficer,
   getRandomReport,
@@ -67,6 +68,15 @@ export interface BridgeState {
   awaitingPong: boolean;
   /** Currently playing Spotify track (null if nothing playing) */
   currentTrack: { artist: string; title: string; lofi?: boolean } | null;
+  /** Lofi sleep mode state */
+  sleep: {
+    /** Which officer is sleeping (null = nobody) */
+    sleepingOfficer: OfficerName | null;
+    /** Countdown before an officer falls asleep after lofi detected (ms) */
+    onsetTimer: number;
+    /** Countdown to next sleep-talk bubble (ms) */
+    bubbleTimer: number;
+  };
   /** Disco mode state */
   disco: {
     state: DiscoState;
@@ -124,6 +134,11 @@ export function createInitialState(): BridgeState {
     missedPings: 0,
     awaitingPong: false,
     currentTrack: null,
+    sleep: {
+      sleepingOfficer: null,
+      onsetTimer: 0,
+      bubbleTimer: 0,
+    },
     disco: {
       state: DiscoState.INACTIVE,
       timer: 0,
@@ -280,8 +295,14 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
         if (
           officerFsm.state === OfficerState.IDLE ||
           officerFsm.state === OfficerState.WANDERING ||
-          officerFsm.state === OfficerState.GOSSIPING
+          officerFsm.state === OfficerState.GOSSIPING ||
+          officerFsm.state === OfficerState.SLEEPING
         ) {
+          // Wake up if sleeping
+          if (officerFsm.state === OfficerState.SLEEPING && next.sleep.sleepingOfficer === name) {
+            next.sleep = { sleepingOfficer: null, onsetTimer: 0, bubbleTimer: 0 };
+            addLogEntry(next, `${config.displayName} jolts awake!`);
+          }
           officerFsm.state = OfficerState.WALKING_TO_STATION;
           officerFsm.stuckTimer = 0;
           addLogEntry(next, `${config.displayName} proceeding to ${config.role} station.`);
@@ -387,6 +408,58 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
         );
         for (const msg of idleResult.logMessages) {
           addLogEntry(next, msg);
+        }
+
+        // Tick lofi sleep mode
+        if (next.currentTrack?.lofi) {
+          if (next.sleep.sleepingOfficer === null) {
+            // No one sleeping yet — count down onset timer
+            next.sleep.onsetTimer += action.deltaMs;
+            if (next.sleep.onsetTimer >= TIMING.SLEEP_ONSET_DELAY) {
+              // Pick a random non-Spoty officer who is IDLE or WANDERING
+              const candidates = [...next.officers.entries()].filter(
+                ([name, o]) =>
+                  name !== "spoty" &&
+                  (o.state === OfficerState.IDLE || o.state === OfficerState.WANDERING),
+              );
+              if (candidates.length > 0) {
+                const [name, officer] = candidates[Math.floor(Math.random() * candidates.length)];
+                officer.state = OfficerState.SLEEPING;
+                officer.render.direction = "down";
+                officer.render.animFrame = 0;
+                next.sleep.sleepingOfficer = name;
+                next.sleep.bubbleTimer = TIMING.SLEEP_BUBBLE_INTERVAL;
+                addLogEntry(next, `${getOfficer(name).displayName} has dozed off...`);
+              }
+            }
+          } else {
+            // Someone is sleeping — show periodic sleep-talk bubbles
+            const officer = next.officers.get(next.sleep.sleepingOfficer);
+            if (officer && officer.state === OfficerState.SLEEPING) {
+              next.sleep.bubbleTimer -= action.deltaMs;
+              if (next.sleep.bubbleTimer <= 0) {
+                next.sleep.bubbleTimer = TIMING.SLEEP_BUBBLE_INTERVAL;
+                const line = SLEEP_TALK[Math.floor(Math.random() * SLEEP_TALK.length)];
+                officer.render.speechBubble = line;
+                officer.render.speechBubbleTimer = TIMING.SPEECH_BUBBLE_DURATION;
+              }
+            } else {
+              // Officer woke up (e.g. MCP event moved them) — clear sleep state
+              next.sleep.sleepingOfficer = null;
+              next.sleep.onsetTimer = 0;
+              next.sleep.bubbleTimer = 0;
+            }
+          }
+        } else if (next.sleep.sleepingOfficer !== null) {
+          // Lofi stopped — wake the sleeping officer
+          const officer = next.officers.get(next.sleep.sleepingOfficer);
+          if (officer && officer.state === OfficerState.SLEEPING) {
+            officer.state = OfficerState.WALKING_TO_IDLE;
+            addLogEntry(next, `${getOfficer(next.sleep.sleepingOfficer).displayName} wakes up with a start!`);
+          }
+          next.sleep.sleepingOfficer = null;
+          next.sleep.onsetTimer = 0;
+          next.sleep.bubbleTimer = 0;
         }
       }
 
@@ -639,6 +712,15 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
         addLogEntry(next, `SPOTY: Now playing — ${next.currentTrack.artist} - ${next.currentTrack.title}`);
       } else if (action.payload.action === "stopped") {
         next.currentTrack = null;
+        // Wake sleeping officer since track stopped
+        if (next.sleep.sleepingOfficer) {
+          const sleeper = next.officers.get(next.sleep.sleepingOfficer);
+          if (sleeper && sleeper.state === OfficerState.SLEEPING) {
+            sleeper.state = OfficerState.WALKING_TO_IDLE;
+            addLogEntry(next, `${getOfficer(next.sleep.sleepingOfficer).displayName} wakes up with a start!`);
+          }
+          next.sleep = { sleepingOfficer: null, onsetTimer: 0, bubbleTimer: 0 };
+        }
         // Spoty walks back to idle
         if (
           spotyFsm.state === OfficerState.DANCING ||
@@ -675,6 +757,15 @@ export function bridgeReducer(state: BridgeState, action: BridgeAction): BridgeS
 
     case "DISCO_EVENT": {
       if (action.payload.action === "start" && next.disco.state === DiscoState.INACTIVE) {
+        // Wake sleeping officer before disco
+        if (next.sleep.sleepingOfficer) {
+          const sleeper = next.officers.get(next.sleep.sleepingOfficer);
+          if (sleeper && sleeper.state === OfficerState.SLEEPING) {
+            sleeper.state = OfficerState.IDLE;
+          }
+          next.sleep = { sleepingOfficer: null, onsetTimer: 0, bubbleTimer: 0 };
+        }
+
         // Save current states for all characters
         const saved = new Map<string, { position: { x: number; y: number }; state: string }>();
         for (const [name, officer] of next.officers) {

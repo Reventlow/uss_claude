@@ -51,6 +51,8 @@ export enum OfficerState {
   SCATTERING = "scattering",
   /** Dancing at station (Spoty reacting to music) */
   DANCING = "dancing",
+  /** Sleeping during lofi music */
+  SLEEPING = "sleeping",
 }
 
 /** Captain Calvin behavioral states */

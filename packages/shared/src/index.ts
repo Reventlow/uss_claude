@@ -68,4 +68,4 @@ export { TIMING, GRID, POSITIONS, RECONNECT, VIEWSCREEN, CAPTAIN_PING } from "./
 export { calculateStardate } from "./stardate.js";
 
 // Content
-export { PUNS, GOSSIPS, SCOLDINGS, CAMEOS, DISCO_LINES, getRandomReport } from "./content/index.js";
+export { PUNS, GOSSIPS, SCOLDINGS, CAMEOS, DISCO_LINES, SLEEP_TALK, getRandomReport } from "./content/index.js";

@@ -4,3 +4,4 @@ export { SCOLDINGS } from "./scoldings.js";
 export { getRandomReport } from "./reports.js";
 export { CAMEOS } from "./cameos.js";
 export { DISCO_LINES } from "./disco-lines.js";
+export { SLEEP_TALK } from "./sleep-talk.js";

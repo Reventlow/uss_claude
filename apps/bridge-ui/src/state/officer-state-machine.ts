@@ -221,6 +221,11 @@ export function tickOfficer(
       }
       break;
     }
+
+    case OfficerState.SLEEPING:
+      // Stay still, face down — sleep talk bubbles handled by bridge-state
+      fsm.render.animFrame = 0;
+      break;
   }
 
   return fsm;

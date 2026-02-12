@@ -54,6 +54,10 @@ export const TIMING = {
   DISCO_BUBBLE_INTERVAL: 5_000,
   /** Trending chart refresh interval (ms) — 1 hour */
   DISCO_CHART_REFRESH: 3_600_000,
+  /** Time between sleep talk bubbles during lofi mode (ms) */
+  SLEEP_BUBBLE_INTERVAL: 8_000,
+  /** Delay before an officer falls asleep after lofi detected (ms) */
+  SLEEP_ONSET_DELAY: 5_000,
 } as const;
 
 // --- Grid constants ---

@@ -1,0 +1,21 @@
+/** Sleep talk lines — shown when an officer dozes off during lofi music */
+export const SLEEP_TALK: string[] = [
+  "Zzz...",
+  "Zzz... Zzz...",
+  "...five more minutes...",
+  "...no, Captain... the tribbles...",
+  "...mmh... promoted...",
+  "...red alert... Zzz...",
+  "...I wasn't sleeping...",
+  "...the shields... are cozy...",
+  "...warp speed... to bed...",
+  "...replicator... warm milk...",
+  "...Zzz... engage...",
+  "...holodeck... beach...",
+  "...no Klingons... only dreams...",
+  "...log entry... Zzz...",
+  "...the torpedoes... are fluffy...",
+  "...shore leave... forever...",
+  "...Zzz... permission granted...",
+  "...number one... pillow...",
+];
